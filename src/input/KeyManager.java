@@ -1,7 +1,5 @@
 package input;
 
-import java.util.IllegalFormatFlagsException;
-
 import processing.core.*;
 import processing.event.*;
 
