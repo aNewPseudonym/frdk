@@ -8,6 +8,13 @@
             "type": "java",
             "name": "CodeLens (Launch) - InputTestApp",
             "request": "launch",
+            "mainClass": "frdk.InputTestApp",
+            "projectName": "frdk_efb1f3bb"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - InputTestApp",
+            "request": "launch",
             "mainClass": "InputTestApp",
             "projectName": "myProcessingLib_29aa29be"
         },

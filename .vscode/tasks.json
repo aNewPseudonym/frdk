@@ -26,8 +26,8 @@
                 "bin",
                 "-cp",
                 "lib\\*.jar",
-                "src\\*.java",
-                "src\\input\\*.java"
+                "src\\frdk\\*.java",
+                "src\\frdk\\input\\*.java"
             ]
         },
         {
@@ -41,7 +41,7 @@
                 "showReuseMessage": true,
                 "clear": false
             },
-            "command": "java -cp \\\"bin;lib/*\\\" InputTestApp",
+            "command": "java -cp \\\"bin;lib/*\\\" frdk\/InputTestApp",
             "group": {
                 "kind": "test",
                 "isDefault": true

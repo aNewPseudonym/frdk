@@ -1,4 +1,4 @@
-package input;
+package frdk.input;
 
 import processing.core.*;
 import processing.event.*;
@@ -145,6 +145,14 @@ public class KeyManager implements PConstants {
         } else {
             return 0;
         }
+    }
+
+    // Functions to test if key was tapped, for a single input.
+    public boolean wasTapped(int i){
+        return ( getState(i) && ((timePressed(i) - 5) < (1000/parent.frameRate)) );
+    }
+    public boolean wasTapped(char c){
+        return ( getState(c) && ((timePressed(c) - 5) < (1000/parent.frameRate)) );
     }
 
 }
