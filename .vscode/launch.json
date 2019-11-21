@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - uiTestApp",
+            "request": "launch",
+            "mainClass": "frdk.uiTestApp",
+            "projectName": "frdk_efb1f3bb"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - InputTestApp",
             "request": "launch",
             "mainClass": "frdk.InputTestApp",
