@@ -1,6 +1,7 @@
 package frdk.ui;
 
 import java.util.ArrayList;
+
 import processing.core.*;
 
 public class uiCanvas{
@@ -14,6 +15,7 @@ public class uiCanvas{
 
     public static void init(PApplet app){
         parent = app;
+
     }
 
     public uiCanvas(float posX, float posY, float dimX, float dimY) {
@@ -47,6 +49,28 @@ public class uiCanvas{
         }
         
         parent.popMatrix();
+    }
+
+    public ArrayList<uiCanvas> getByPoint(float x, float y){
+        ArrayList<uiCanvas> pointedAt = new ArrayList<uiCanvas>();
+        PVector point = new PVector(x-pos.x, y-pos.y);
+
+        parent.pushMatrix();
+        parent.translate(pos.x, pos.y);
+
+        if( isPointOn(point.x,point.y) ){
+            pointedAt.add(this);
+        }
+
+        for(uiCanvas child : elements){
+            pointedAt.addAll(child.getByPoint(point.x,point.y));
+        }
+        parent.popMatrix();
+        return pointedAt;
+    }
+
+    private boolean isPointOn(float x, float y){
+        return ( x>0 && x<dim.x && y>0 && y<+dim.y );
     }
 
 }

@@ -3,7 +3,7 @@ package frdk.ui;
 import processing.core.*;
 
 public class uidBackground extends uiDecorator{
-    int background;
+    private int background;
 
     public uidBackground(int bg){
         background = bg;
@@ -24,5 +24,9 @@ public class uidBackground extends uiDecorator{
         app.endShape(CLOSE);
         
         app.popStyle();
+    }
+
+    public void setColor(int bg){
+        background = bg;
     }
 }

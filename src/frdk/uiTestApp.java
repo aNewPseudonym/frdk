@@ -1,11 +1,13 @@
 package frdk;
 
+import java.util.ArrayList;
+
 import frdk.ui.*;
 import processing.core.*;
 
 public class uiTestApp extends PApplet{
 
-    uiCanvas myCanvas;
+    uiWindow myCanvas;
     PFont font;
 
     public static void main(String[] args) {
@@ -19,17 +21,32 @@ public class uiTestApp extends PApplet{
 
     public void setup() {
         uiCanvas.init(this);
-
-        myCanvas = new uiCanvas(50, 50, 300, 200);
-        myCanvas.addDecorator(new uidBackground(color(204, 153, 0)));
-        
-        font = createFont("Times New Roman Bold", 28);
-        myCanvas.addDecorator(new uidText("My Canvas", font, color(117,99,139), color(229,144,165) ) );
+        myCanvas = new uiWindow("My Window!");
     }
 
     public void draw() {
         background(200);
         myCanvas.drawCanvas();
+
+        ArrayList<uiCanvas> selected = myCanvas.getByPoint(mouseX, mouseY);
+        for(uiCanvas uic : selected){
+            println(uic);
+        }
     }
+
+    public void mouseClicked(){
+        checkClickables(myCanvas, mouseX, mouseY);
+    }
+      
+    //recursive function to find Clickable canvases within uiCollections
+    public void checkClickables(uiCanvas canvas, float x, float y){
+        ArrayList<uiCanvas> onPoint = canvas.getByPoint(x, y);
+        for(uiCanvas toClick : onPoint){
+            if(toClick instanceof Clickable){
+                ((Clickable) toClick).click();
+            }
+        }
+    }
+
 }
 

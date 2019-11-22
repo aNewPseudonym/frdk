@@ -30,4 +30,8 @@ public class uidText extends uiDecorator{
         app.noClip();
         app.popStyle();
     }
+
+    public void setText(String s){
+        content = s;
+    }
 }
