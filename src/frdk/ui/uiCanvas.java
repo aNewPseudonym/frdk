@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import processing.core.*;
 
 public class uiCanvas{
-    protected PApplet parent;
+    protected static PApplet parent;
     
     public PVector pos;
     public PVector dim;
@@ -12,9 +12,11 @@ public class uiCanvas{
     protected ArrayList<uiDecorator> decorations;
     protected ArrayList<uiCanvas> elements;
 
-    public uiCanvas(PApplet p, float posX, float posY, float dimX, float dimY) {
-        parent = p;
+    public static void init(PApplet app){
+        parent = app;
+    }
 
+    public uiCanvas(float posX, float posY, float dimX, float dimY) {
         pos = new PVector(posX, posY);
         dim = new PVector(dimX, dimY);
 

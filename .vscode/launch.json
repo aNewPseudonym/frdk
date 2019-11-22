@@ -9,6 +9,13 @@
             "name": "CodeLens (Launch) - uiTestApp",
             "request": "launch",
             "mainClass": "frdk.uiTestApp",
+            "projectName": "frdk_2ac8cc55"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - uiTestApp",
+            "request": "launch",
+            "mainClass": "frdk.uiTestApp",
             "projectName": "frdk_efb1f3bb"
         },
         {

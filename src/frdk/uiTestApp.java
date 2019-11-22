@@ -18,7 +18,9 @@ public class uiTestApp extends PApplet{
     }
 
     public void setup() {
-        myCanvas = new uiCanvas(this, 50, 50, 300, 200);
+        uiCanvas.init(this);
+
+        myCanvas = new uiCanvas(50, 50, 300, 200);
         myCanvas.addDecorator(new uidBackground(color(204, 153, 0)));
         
         font = createFont("Times New Roman Bold", 28);

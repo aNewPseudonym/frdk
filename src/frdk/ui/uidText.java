@@ -15,7 +15,7 @@ public class uidText extends uiDecorator{
     }
 
     public void drawDecorator(uiCanvas canvas) {
-        PApplet app = canvas.parent;
+        PApplet app = uiCanvas.parent;
 
         app.pushStyle();
         app.clip(0, 0, canvas.dim.x, canvas.dim.y);

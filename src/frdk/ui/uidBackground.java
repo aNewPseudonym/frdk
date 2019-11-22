@@ -10,7 +10,7 @@ public class uidBackground extends uiDecorator{
     }
 
     public void drawDecorator(uiCanvas canvas) {
-        PApplet app = canvas.parent;
+        PApplet app = uiCanvas.parent;
 
         app.pushStyle();
         //draw background box
