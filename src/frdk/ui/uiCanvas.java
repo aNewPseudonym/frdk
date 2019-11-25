@@ -1,25 +1,30 @@
 package frdk.ui;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import processing.core.*;
 
 public class uiCanvas implements PConstants{
-    protected static PApplet parent;
+    private static PApplet app;
 
     // what if it had a single arraylist that referenced all canvases
     // for iterating through to select/deselect, click, etc...
     //private static ArrayList<uiCanvas> allCanvases;
-    
+
     public PVector pos;
     public PVector dim;
 
     protected ArrayList<uiDecorator> decorations;
-    protected ArrayList<uiCanvas> elements;
+    protected ArrayList<uiCanvas> children;
+    protected uiCanvas parent;
 
-    public static void init(PApplet app){
-        parent = app;
-
+    // must always be initialized with PApplet before use
+    public static void init(PApplet theApp){
+        app = theApp;
+    }
+    public static PApplet getApp(){
+        return app;
     }
 
     public uiCanvas(float posX, float posY, float dimX, float dimY) {
@@ -27,64 +32,94 @@ public class uiCanvas implements PConstants{
         dim = new PVector(dimX, dimY);
 
         decorations = new ArrayList<uiDecorator>();
-        elements = new ArrayList<uiCanvas>();
+        children = new ArrayList<uiCanvas>();
+
+        parent = null;
     }
     
-    // Note: order matters when adding decorators, drawn linearly
+    // Note: order matters when adding decorators and children, drawn linearly
     public void addDecorator(uiDecorator deco){
         decorations.add(deco);
     }
-
-    public void addElement(uiCanvas ele){
-        elements.add(ele);
+    public void addDecoratorList(ArrayList<uiDecorator> decos){
+        decorations.addAll(decos);
     }
 
+    // addChild and setParent, should always be coupled to ensure valid tree
+    final public void addChild(uiCanvas child){
+        children.add(child);
+        child.setParent(this);
+    }
+    // child must be added to tree before parent is set
+    final public void setParent(uiCanvas p){
+        if(p.getIndexOf(this) > -1){
+            parent = p;
+        }
+    }
+
+    // helpful getter functions, querying children tree
+    public int getIndexOf(uiCanvas child){
+        return children.indexOf(child);
+    }
+    public boolean hasChildren(){
+        return(children.size() > 0);
+    }
+    public uiCanvas getByIndex(int index){
+        if(index>=0 && index<children.size()){
+            return children.get(index);
+        } else {
+            return null;
+        }
+    }
+
+    // provides an iterator for navigating the children list
+    public Iterator<uiCanvas> getElementIterator(){
+        return children.iterator();
+    }
+
+    // requests position from parent, recursively up to the top of tree
+    public PVector getAbsolutePosition(){
+        PVector absPos = new PVector(pos.x, pos.y);
+        if(parent != null){
+            absPos.add(parent.getAbsolutePosition());
+        }
+        return absPos;
+    }
+
+    // returns flattened list of all elements that are under the given point
+    public ArrayList<uiCanvas> getByPoint(float x, float y){
+        ArrayList<uiCanvas> pointedAt = new ArrayList<uiCanvas>();
+
+        if( isPointOn(x, y) ){
+            pointedAt.add(this);
+        }
+
+        for(uiCanvas child : children){
+            pointedAt.addAll(child.getByPoint(x-pos.x, y-pos.y));
+        }
+        
+        return pointedAt;
+    }
+    // simple positional test
+    public boolean isPointOn(float x, float y){
+        return ( x>pos.x && x<pos.x+dim.x && y>pos.y && y<pos.y+dim.y );
+    }
+
+    // fundamental draw function
+    // translates to itself, draws it's decorators, then all children
     public void drawCanvas() {
-        parent.pushMatrix();
-        parent.translate(pos.x, pos.y);
+        app.pushMatrix();
+        app.translate(pos.x, pos.y);
 
         //draw decorations linearly
         for(uiDecorator deco : decorations) {
             deco.drawDecorator(this);
         }
-        //call upon child elements to call themselves
-        for(uiCanvas ele : elements) {
+        //call upon child children to call themselves
+        for(uiCanvas ele : children) {
           ele.drawCanvas();
         }
         
-        parent.popMatrix();
+        app.popMatrix();
     }
-
-    public ArrayList<uiCanvas> getChildren(){
-        ArrayList<uiCanvas> children = new ArrayList<uiCanvas>();
-        children.add(this);
-        for(uiCanvas child : elements){
-            children.addAll(child.getChildren());
-        }
-        return children;
-    }
-
-    public ArrayList<uiCanvas> getByPoint(float x, float y){
-        ArrayList<uiCanvas> pointedAt = new ArrayList<uiCanvas>();
-        PVector point = new PVector(x-pos.x, y-pos.y);
-
-        parent.pushMatrix();
-        parent.translate(pos.x, pos.y);
-
-        if( isPointOn(point.x,point.y) ){
-            pointedAt.add(this);
-        }
-
-        for(uiCanvas child : elements){
-            pointedAt.addAll(child.getByPoint(point.x,point.y));
-        }
-        parent.popMatrix();
-        
-        return pointedAt;
-    }
-
-    private boolean isPointOn(float x, float y){
-        return ( x>0 && x<dim.x && y>0 && y<+dim.y );
-    }
-
 }

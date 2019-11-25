@@ -2,32 +2,28 @@ package frdk.ui;
 
 import processing.core.*;
 
-public class uiWindow extends uiCanvas implements Subscriber{
+public class uiWindow extends uiCanvas{
     private uiButton randomizer;
     private uidBackground bg;
 
-    public uiWindow(String WindowName){
-        super(50, 50, 600, 400);
+    public uiWindow(String WindowName, float x, float y, float w, float h){
+        super(x, y, w, h);
 
-        bg = new uidBackground(parent.color(218,194,145));
+        bg = new uidBackground(100);
         addDecorator(bg);
         
-        PFont times = parent.createFont("Times New Roman Bold", 48);
+        PFont times = uiCanvas.getApp().createFont("Times New Roman Bold", 32);
         uiText header = new uiText(25,25,100,100, WindowName);
         header.setFont(times);
-        addElement(header);
+        addChild(header);
 
-        
-        randomizer = new uiButton(dim.x-50, 25, 25, 25);
-        randomizer.addSub(this);
-        randomizer.addDecorator(new uidBackground(parent.color(80,117,146)));
+        comRandomize clickCommand = new comRandomize(bg);
+        randomizer = new uiButton(dim.x-50, 25, 25, 25, clickCommand);
+        randomizer.addDecorator(new uidBackground(0xFFFFC857));
 
-        addElement(randomizer);
+        addChild(randomizer);
 
-        addElement(new uiHoverBox(100, 100));
+        addChild(new uiHoverBox(100, 100));
     }
 
-    public void tuneIn(Broadcaster bc) {
-        bg.setColor( parent.color(parent.random(255),parent.random(255),parent.random(255)) );
-    }
 }

@@ -22,7 +22,7 @@ public class uiText extends uiCanvas implements PConstants{
     }
 
     public void drawCanvas() {
-        PApplet app = uiCanvas.parent;
+        PApplet app = uiCanvas.getApp();
 
         app.pushStyle();
         //app.clip(0, 0, canvas.dim.x, canvas.dim.y);
@@ -51,7 +51,7 @@ public class uiText extends uiCanvas implements PConstants{
         font = pf;
     }
     public void setFont(String fontLocation, float size) {
-        font = parent.createFont(fontLocation, size);
+        font = uiCanvas.getApp().createFont(fontLocation, size);
     }
     public void setStyle(int h, int v){
         horzStyle = h;

@@ -1,7 +1,6 @@
 package frdk;
 
-import java.util.ArrayList;
-
+import java.util.Iterator;
 import frdk.ui.*;
 import processing.core.*;
 
@@ -16,19 +15,18 @@ public class uiTestApp extends PApplet{
     }
 
     public void settings() {
-        size(1600, 1200);
+        size(800, 600);
     }
 
     public void setup() {
         uiCanvas.init(this);
-        myCanvas = new uiWindow("My Window!");
+        myCanvas = new uiWindow("My Window!", 50, 50, 300, 250);
     }
 
     public void draw() {
         background(200);
         myCanvas.drawCanvas();
 
-        deselectAll(myCanvas);
         checkSelectables(myCanvas, mouseX, mouseY);
     }
 
@@ -37,31 +35,31 @@ public class uiTestApp extends PApplet{
     }
 
     public void checkClickables(uiCanvas canvas, float x, float y){
-        ArrayList<uiCanvas> onPoint = canvas.getByPoint(x, y);
-        for(uiCanvas toClick : onPoint){
-            if(toClick instanceof Clickable){
-                ((Clickable) toClick).click();
+        if(canvas instanceof uiButton){
+            if( canvas.isPointOn(x, y) ){
+                ((uiButton)canvas).click();
+                System.out.println(canvas.getAbsolutePosition().toString());
             }
+        }
+        Iterator<uiCanvas> iter = canvas.getElementIterator();
+        while(iter.hasNext()){
+            checkClickables(iter.next(), x-canvas.pos.x, y-canvas.pos.y);
         }
     }
 
     public void checkSelectables(uiCanvas canvas, float x, float y){
-        ArrayList<uiCanvas> onPoint = canvas.getByPoint(x, y);
-        for(uiCanvas toSelect : onPoint){
-            if(toSelect instanceof Selectable){
-                ((Selectable) toSelect).select();
+        if(canvas instanceof Selectable){
+            if( canvas.isPointOn(x, y) && !((Selectable)canvas).isSelected() ){
+                ((Selectable)canvas).select();
+                System.out.println(canvas.getAbsolutePosition().toString());
+            }
+            else if( !canvas.isPointOn(x, y) && ((Selectable)canvas).isSelected() ){
+                ((Selectable)canvas).deselect();
             }
         }
-    }
-
-    public void deselectAll(uiCanvas canvas){
-        ArrayList<uiCanvas> children = canvas.getChildren();
-        for(uiCanvas toDeselect : children){
-            if(toDeselect instanceof Selectable){
-                if(( (Selectable)toDeselect).isSelected() ){
-                    ((Selectable)toDeselect).deselect();
-                }
-            }
+        Iterator<uiCanvas> iter = canvas.getElementIterator();
+        while(iter.hasNext()){
+            checkSelectables(iter.next(), x-canvas.pos.x, y-canvas.pos.y);
         }
     }
 

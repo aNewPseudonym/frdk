@@ -1,14 +1,12 @@
 package frdk.ui;
 
-import processing.core.*;
-
 public class uiHoverBox extends uiCanvas implements Selectable{
     boolean isSelected;
     uidBackground bg;
     
     public uiHoverBox(int x, int y){
         super(x, y, 50, 50);
-        bg = new uidBackground(parent.color(226,232,221));
+        bg = new uidBackground(0xffe2e8dd);
         addDecorator(bg);
         isSelected = false;
     }
@@ -18,10 +16,10 @@ public class uiHoverBox extends uiCanvas implements Selectable{
     }
     public void select() {
         isSelected = true;
-        bg.setColor(parent.color(233,128,110));
+        bg.fill = 0xffe9806e;
     }
     public void deselect() {
         isSelected = false;
-        bg.setColor(parent.color(226,232,221));
+        bg.fill = 0xffe2e8dd;
     }
 }
