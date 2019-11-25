@@ -7,19 +7,24 @@ public class uiWindow extends uiCanvas implements Subscriber{
     private uidBackground bg;
 
     public uiWindow(String WindowName){
-        super(50, 50, 300, 200);
+        super(50, 50, 600, 400);
 
         bg = new uidBackground(parent.color(218,194,145));
         addDecorator(bg);
         
-        PFont font = parent.createFont("Times New Roman Bold", 28);
-        addDecorator( new uidText(WindowName, font, 50, 0) );
+        PFont times = parent.createFont("Times New Roman Bold", 48);
+        uiText header = new uiText(25,25,100,100, WindowName);
+        header.setFont(times);
+        addElement(header);
+
         
-        randomizer = new uiButton(250, 25, 25, 25);
+        randomizer = new uiButton(dim.x-50, 25, 25, 25);
         randomizer.addSub(this);
         randomizer.addDecorator(new uidBackground(parent.color(80,117,146)));
 
         addElement(randomizer);
+
+        addElement(new uiHoverBox(100, 100));
     }
 
     public void tuneIn(Broadcaster bc) {

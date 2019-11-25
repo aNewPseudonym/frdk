@@ -4,8 +4,12 @@ import java.util.ArrayList;
 
 import processing.core.*;
 
-public class uiCanvas{
+public class uiCanvas implements PConstants{
     protected static PApplet parent;
+
+    // what if it had a single arraylist that referenced all canvases
+    // for iterating through to select/deselect, click, etc...
+    //private static ArrayList<uiCanvas> allCanvases;
     
     public PVector pos;
     public PVector dim;
@@ -26,7 +30,7 @@ public class uiCanvas{
         elements = new ArrayList<uiCanvas>();
     }
     
-    // Note: order matters when adding decorators, drawn in order
+    // Note: order matters when adding decorators, drawn linearly
     public void addDecorator(uiDecorator deco){
         decorations.add(deco);
     }
@@ -51,6 +55,15 @@ public class uiCanvas{
         parent.popMatrix();
     }
 
+    public ArrayList<uiCanvas> getChildren(){
+        ArrayList<uiCanvas> children = new ArrayList<uiCanvas>();
+        children.add(this);
+        for(uiCanvas child : elements){
+            children.addAll(child.getChildren());
+        }
+        return children;
+    }
+
     public ArrayList<uiCanvas> getByPoint(float x, float y){
         ArrayList<uiCanvas> pointedAt = new ArrayList<uiCanvas>();
         PVector point = new PVector(x-pos.x, y-pos.y);
@@ -66,6 +79,7 @@ public class uiCanvas{
             pointedAt.addAll(child.getByPoint(point.x,point.y));
         }
         parent.popMatrix();
+        
         return pointedAt;
     }
 

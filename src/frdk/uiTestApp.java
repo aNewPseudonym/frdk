@@ -16,7 +16,7 @@ public class uiTestApp extends PApplet{
     }
 
     public void settings() {
-        size(400, 300);
+        size(1600, 1200);
     }
 
     public void setup() {
@@ -28,22 +28,39 @@ public class uiTestApp extends PApplet{
         background(200);
         myCanvas.drawCanvas();
 
-        ArrayList<uiCanvas> selected = myCanvas.getByPoint(mouseX, mouseY);
-        for(uiCanvas uic : selected){
-            println(uic);
-        }
+        deselectAll(myCanvas);
+        checkSelectables(myCanvas, mouseX, mouseY);
     }
 
     public void mouseClicked(){
         checkClickables(myCanvas, mouseX, mouseY);
     }
-      
-    //recursive function to find Clickable canvases within uiCollections
+
     public void checkClickables(uiCanvas canvas, float x, float y){
         ArrayList<uiCanvas> onPoint = canvas.getByPoint(x, y);
         for(uiCanvas toClick : onPoint){
             if(toClick instanceof Clickable){
                 ((Clickable) toClick).click();
+            }
+        }
+    }
+
+    public void checkSelectables(uiCanvas canvas, float x, float y){
+        ArrayList<uiCanvas> onPoint = canvas.getByPoint(x, y);
+        for(uiCanvas toSelect : onPoint){
+            if(toSelect instanceof Selectable){
+                ((Selectable) toSelect).select();
+            }
+        }
+    }
+
+    public void deselectAll(uiCanvas canvas){
+        ArrayList<uiCanvas> children = canvas.getChildren();
+        for(uiCanvas toDeselect : children){
+            if(toDeselect instanceof Selectable){
+                if(( (Selectable)toDeselect).isSelected() ){
+                    ((Selectable)toDeselect).deselect();
+                }
             }
         }
     }

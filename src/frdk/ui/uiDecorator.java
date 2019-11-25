@@ -1,7 +1,7 @@
 package frdk.ui;
 
-import processing.core.PConstants;
+import processing.core.*;
 
-abstract class uiDecorator implements PConstants{
-  abstract void drawDecorator(uiCanvas canvas);
+public abstract class uiDecorator implements PConstants{
+    public abstract void drawDecorator(uiCanvas canvas);
 }
