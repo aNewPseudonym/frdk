@@ -8,28 +8,51 @@ import processing.core.*;
 public class uiCanvas implements PConstants{
     private static PApplet app;
 
-    // what if it had a single arraylist that referenced all canvases
-    // for iterating through to select/deselect, click, etc...
-    //private static ArrayList<uiCanvas> allCanvases;
+    // want 2 types of canvases: CORNERS and CENTER
+    // CORNERS as default
+    // TO-DO: where does this affect things?
+    // TO-DO: should CORNER and RADIUS be valid? probs not...
+    public int shapeMode;   // ^^^
 
-    public PVector pos;
-    public PVector dim;
+    public PVector pos;     // either top-left corner, or center
+    public PVector dim;     // want this to be size of PGraphics
+    public PShape shape;    // shape of canvas - RECT by default
 
-    protected ArrayList<uiDecorator> decorations;
-    protected ArrayList<uiCanvas> children;
-    protected uiCanvas parent;
+    protected PGraphics pg;     // where canvas and decorators draw to, sized by dim
+    protected ArrayList<uiDecorator> decorations;   // list of decorators
+    protected ArrayList<uiCanvas> children;         // nested list of other canvases
+    protected uiCanvas parent;      // parent in canvas tree, for upwards traversal
 
-    // must always be initialized with PApplet before use
+    // must always be statically initialized with PApplet before use
     public static void init(PApplet theApp){
         app = theApp;
     }
+    //for passing app to subclasses and decorators
     public static PApplet getApp(){
         return app;
     }
 
+    // constructor w/o PShape, generates RECT PShape by default
     public uiCanvas(float posX, float posY, float dimX, float dimY) {
         pos = new PVector(posX, posY);
         dim = new PVector(dimX, dimY);
+
+        // is this creating a properly sized shape?
+        shape = app.createShape(RECT,0,0,dimX,dimY);
+        pg = app.createGraphics((int)dim.x, (int)dim.y);
+
+        decorations = new ArrayList<uiDecorator>();
+        children = new ArrayList<uiCanvas>();
+
+        parent = null;
+    }
+
+    // constructor with PShape, 
+    public uiCanvas(float posX, float posY, float dimX, float dimY, PShape ps) {
+        pos = new PVector(posX, posY);
+        dim = new PVector(dimX, dimY);
+        shape = ps;
+        pg = app.createGraphics((int)dim.x, (int)dim.y);
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
