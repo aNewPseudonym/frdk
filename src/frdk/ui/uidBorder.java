@@ -12,21 +12,18 @@ public class uidBorder extends uiDecorator{
     }
 
     public void drawDecorator(uiCanvas canvas){
-        PApplet app = uiCanvas.getApp();
+        PShape ps = canvas.shape;
+        ps.disableStyle();
 
-        app.pushStyle();
-        
-        app.noFill();
-        app.stroke(stroke);
-        app.strokeWeight(weight);
-        
-        app.beginShape();
-        app.vertex(0, 0);
-        app.vertex(canvas.dim.x, 0);
-        app.vertex(canvas.dim.x, canvas.dim.y);
-        app.vertex(0, canvas.dim.y);
-        app.endShape(CLOSE);
-        
-        app.popStyle();
+        PGraphics pg = canvas.pg;
+        pg.pushStyle();
+
+        pg.stroke(stroke);
+        pg.strokeWeight(weight);
+        pg.noFill();
+
+        pg.shape(ps,0,0);
+
+        pg.popStyle();
     }
 }

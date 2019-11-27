@@ -8,17 +8,10 @@ import processing.core.*;
 public class uiCanvas implements PConstants{
     private static PApplet app;
 
-    // want 2 types of canvases: CORNERS and CENTER
-    // CORNERS as default
-    // TO-DO: where does this affect things?
-    // TO-DO: should CORNER and RADIUS be valid? probs not...
-    public int shapeMode;   // ^^^
-
     public PVector pos;     // either top-left corner, or center
-    public PVector dim;     // want this to be size of PGraphics
     public PShape shape;    // shape of canvas - RECT by default
-
-    protected PGraphics pg;     // where canvas and decorators draw to, sized by dim
+    public PGraphics pg;    // where canvas and decorators draw to, sized by dim
+    
     protected ArrayList<uiDecorator> decorations;   // list of decorators
     protected ArrayList<uiCanvas> children;         // nested list of other canvases
     protected uiCanvas parent;      // parent in canvas tree, for upwards traversal
@@ -35,11 +28,8 @@ public class uiCanvas implements PConstants{
     // constructor w/o PShape, generates RECT PShape by default
     public uiCanvas(float posX, float posY, float dimX, float dimY) {
         pos = new PVector(posX, posY);
-        dim = new PVector(dimX, dimY);
-
-        // is this creating a properly sized shape?
         shape = app.createShape(RECT,0,0,dimX,dimY);
-        pg = app.createGraphics((int)dim.x, (int)dim.y);
+        pg = app.createGraphics(app.width, app.height);
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
@@ -47,12 +37,11 @@ public class uiCanvas implements PConstants{
         parent = null;
     }
 
-    // constructor with PShape, 
-    public uiCanvas(float posX, float posY, float dimX, float dimY, PShape ps) {
+    // constructor with PShape
+    public uiCanvas(float posX, float posY, PShape ps) {
         pos = new PVector(posX, posY);
-        dim = new PVector(dimX, dimY);
         shape = ps;
-        pg = app.createGraphics((int)dim.x, (int)dim.y);
+        pg = app.createGraphics(app.width, app.height);
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
@@ -81,11 +70,11 @@ public class uiCanvas implements PConstants{
     }
 
     // helpful getter functions, querying children tree
-    public int getIndexOf(uiCanvas child){
-        return children.indexOf(child);
-    }
     public boolean hasChildren(){
         return(children.size() > 0);
+    }
+    public int getIndexOf(uiCanvas child){
+        return children.indexOf(child);
     }
     public uiCanvas getByIndex(int index){
         if(index>=0 && index<children.size()){
@@ -109,36 +98,30 @@ public class uiCanvas implements PConstants{
         return absPos;
     }
 
-    // returns flattened list of all elements that are under the given point
-    public ArrayList<uiCanvas> getByPoint(float x, float y){
-        ArrayList<uiCanvas> pointedAt = new ArrayList<uiCanvas>();
-
-        if( isPointOn(x, y) ){
-            pointedAt.add(this);
-        }
-
-        for(uiCanvas child : children){
-            pointedAt.addAll(child.getByPoint(x-pos.x, y-pos.y));
-        }
-        
-        return pointedAt;
-    }
-    // simple positional test
+    // Positional test - how do
     public boolean isPointOn(float x, float y){
-        return ( x>pos.x && x<pos.x+dim.x && y>pos.y && y<pos.y+dim.y );
+        return true;
     }
 
     // fundamental draw function
     // translates to itself, draws it's decorators, then all children
     public void drawCanvas() {
-        app.pushMatrix();
-        app.translate(pos.x, pos.y);
-
-        //draw decorations linearly
+        pg.beginDraw();
+        pg.pushMatrix();
+        pg.translate(pg.width/2, pg.height/2);
+        //draw decorations linearly, which render to canvas's PGraphics
         for(uiDecorator deco : decorations) {
             deco.drawDecorator(this);
         }
-        //call upon child children to call themselves
+        pg.popMatrix();
+        pg.endDraw();
+
+        app.pushMatrix();
+        app.translate(pos.x, pos.y);
+
+        app.image(pg,-pg.width/2,-pg.height/2); //draw self
+
+        //call upon children to call themselves
         for(uiCanvas ele : children) {
           ele.drawCanvas();
         }

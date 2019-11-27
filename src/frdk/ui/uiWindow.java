@@ -11,15 +11,18 @@ public class uiWindow extends uiCanvas{
 
         bg = new uidBackground(100);
         addDecorator(bg);
+        addDecorator(new uidBorder(255, 8));
         
         PFont times = uiCanvas.getApp().createFont("Times New Roman Bold", 32);
-        uiText header = new uiText(25,25,100,100, WindowName);
+        uiText header = new uiText((w/2),25,100,100, WindowName);
         header.setFont(times);
+        header.setStyle(CENTER, CENTER);
         addChild(header);
 
         comRandomize clickCommand = new comRandomize(bg);
-        randomizer = new uiButton(dim.x-50, 25, 25, 25, clickCommand);
+        randomizer = new uiButton(w/2, h-50, 100, 25, clickCommand);
         randomizer.addDecorator(new uidBackground(0xFFFFC857));
+        randomizer.addDecorator(new uidBorder(255, 2));
 
         addChild(randomizer);
 

@@ -32,10 +32,11 @@ public class uiText extends uiCanvas implements PConstants{
         app.textAlign(horzStyle, vertStyle);
         app.stroke(stroke);
         app.fill(fill);
-        app.text(content, 0, 0);
+        app.text(content, pos.x, pos.y);
     
         //app.noClip();
         app.popStyle();
+
         
         super.drawCanvas();
     }
