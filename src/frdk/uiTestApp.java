@@ -8,6 +8,7 @@ public class uiTestApp extends PApplet{
 
     uiWindow myCanvas;
     PFont font;
+    CanvasPicker cp;
 
     public static void main(String[] args) {
         PApplet.main("frdk.uiTestApp");
@@ -20,46 +21,42 @@ public class uiTestApp extends PApplet{
 
     public void setup() {
         uiCanvas.init(this);
-        myCanvas = new uiWindow("My Window!", 50, 50, 300, 250);
+        myCanvas = new uiWindow("My Window!", 50, 50, 300, 400);
+        cp = new CanvasPicker(myCanvas);
     }
 
     public void draw() {
         background(200);
-        myCanvas.drawCanvas();
+        myCanvas.drawCanvas(0,0);
 
         checkSelectables(myCanvas, mouseX, mouseY);
     }
 
     public void mouseClicked(){
-        checkClickables(myCanvas, mouseX, mouseY);
+        println(cp.getID(mouseX, mouseY));
+        checkClickables(cp.getCanvas(mouseX, mouseY));
     }
 
-    public void checkClickables(uiCanvas canvas, float x, float y){
+    public void checkClickables(uiCanvas canvas){
         if(canvas instanceof uiButton){
-            if( canvas.isPointOn(x, y) ){
-                ((uiButton)canvas).click();
-                System.out.println(canvas.getAbsolutePosition().toString());
-            }
-        }
-        Iterator<uiCanvas> iter = canvas.getElementIterator();
-        while(iter.hasNext()){
-            checkClickables(iter.next(), x-canvas.pos.x, y-canvas.pos.y);
+            ((uiButton)canvas).click();
+            System.out.println(canvas.getAbsolutePosition().toString());
         }
     }
 
-    public void checkSelectables(uiCanvas canvas, float x, float y){
+    public void checkSelectables(uiCanvas canvas, int x, int y){
         if(canvas instanceof Selectable){
-            if( canvas.isPointOn(x, y) && !((Selectable)canvas).isSelected() ){
+            if( (canvas == cp.getCanvas(x, y)) && !((Selectable)canvas).isSelected() ){
                 ((Selectable)canvas).select();
                 System.out.println(canvas.getAbsolutePosition().toString());
             }
-            else if( !canvas.isPointOn(x, y) && ((Selectable)canvas).isSelected() ){
+            else if( (canvas != cp.getCanvas(x, y)) && ((Selectable)canvas).isSelected() ){
                 ((Selectable)canvas).deselect();
             }
         }
         Iterator<uiCanvas> iter = canvas.getElementIterator();
         while(iter.hasNext()){
-            checkSelectables(iter.next(), x-canvas.pos.x, y-canvas.pos.y);
+            checkSelectables(iter.next(), x, y);
         }
     }
 

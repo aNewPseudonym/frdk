@@ -8,8 +8,8 @@ public class uiText extends uiCanvas implements PConstants{
     int fill, stroke;
     int horzStyle, vertStyle;
 
-    public uiText(float x, float y, float w, float h, String s){
-        super(x,y,w,h);
+    public uiText(float x, float y, String s){
+        super(x,y,0,0);
 
         content = s;
 
@@ -21,11 +21,12 @@ public class uiText extends uiCanvas implements PConstants{
         vertStyle = TOP;
     }
 
-    public void drawCanvas() {
+    public void drawCanvas(float x, float y) {
         PApplet app = uiCanvas.getApp();
 
+        app.pushMatrix();
+        app.translate(x, y);
         app.pushStyle();
-        //app.clip(0, 0, canvas.dim.x, canvas.dim.y);
     
         app.textFont(font);
         app.textLeading(font.getSize() + 2);
@@ -33,12 +34,12 @@ public class uiText extends uiCanvas implements PConstants{
         app.stroke(stroke);
         app.fill(fill);
         app.text(content, pos.x, pos.y);
-    
-        //app.noClip();
+
         app.popStyle();
+        app.popMatrix();
 
         
-        super.drawCanvas();
+        super.drawCanvas(x, y);
     }
 
     public void setText(String s){

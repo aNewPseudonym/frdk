@@ -11,6 +11,9 @@ public class uiCanvas implements PConstants{
     public PVector pos;     // either top-left corner, or center
     public PShape shape;    // shape of canvas - RECT by default
     public PGraphics pg;    // where canvas and decorators draw to, sized by dim
+    public PGraphics clippingMask;
+    
+    public int opacity;
     
     protected ArrayList<uiDecorator> decorations;   // list of decorators
     protected ArrayList<uiCanvas> children;         // nested list of other canvases
@@ -30,6 +33,7 @@ public class uiCanvas implements PConstants{
         pos = new PVector(posX, posY);
         shape = app.createShape(RECT,0,0,dimX,dimY);
         pg = app.createGraphics(app.width, app.height);
+        clippingMask = app.createGraphics(pg.width, pg.height);
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
@@ -42,6 +46,7 @@ public class uiCanvas implements PConstants{
         pos = new PVector(posX, posY);
         shape = ps;
         pg = app.createGraphics(app.width, app.height);
+        clippingMask = app.createGraphics(pg.width, pg.height);
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
@@ -105,10 +110,20 @@ public class uiCanvas implements PConstants{
 
     // fundamental draw function
     // translates to itself, draws it's decorators, then all children
-    public void drawCanvas() {
+    public void drawCanvas(float x, float y) {
+        // update clipping mask
+        shape.disableStyle();
+        clippingMask.beginDraw();
+        clippingMask.background(0);
+        clippingMask.noStroke();
+        clippingMask.fill(255);
+        clippingMask.shape(shape,x+pos.x,y+pos.y);
+        clippingMask.endDraw();
+
+        // prepare PGraphics buffer, translating to absolute position
         pg.beginDraw();
         pg.pushMatrix();
-        pg.translate(pg.width/2, pg.height/2);
+        pg.translate(x + pos.x, y + pos.y);
         //draw decorations linearly, which render to canvas's PGraphics
         for(uiDecorator deco : decorations) {
             deco.drawDecorator(this);
@@ -116,16 +131,12 @@ public class uiCanvas implements PConstants{
         pg.popMatrix();
         pg.endDraw();
 
-        app.pushMatrix();
-        app.translate(pos.x, pos.y);
+        app.image(pg,0,0); //draw self
 
-        app.image(pg,-pg.width/2,-pg.height/2); //draw self
-
-        //call upon children to call themselves
+        //call upon children to call themselves, passing position down tree
         for(uiCanvas ele : children) {
-          ele.drawCanvas();
+          ele.drawCanvas(x + pos.x, y + pos.y);
         }
         
-        app.popMatrix();
     }
 }

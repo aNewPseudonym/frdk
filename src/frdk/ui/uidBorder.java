@@ -21,7 +21,6 @@ public class uidBorder extends uiDecorator{
         pg.stroke(stroke);
         pg.strokeWeight(weight);
         pg.noFill();
-
         pg.shape(ps,0,0);
 
         pg.popStyle();

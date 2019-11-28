@@ -18,7 +18,7 @@ public class uidBackground extends uiDecorator{
 
         pg.noStroke();
         pg.fill(fill);
-        pg.shape(ps);
+        pg.shape(ps,0,0);
 
         pg.popStyle();
     }
