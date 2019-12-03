@@ -13,7 +13,8 @@ public class uiCanvas implements PConstants{
     public PGraphics pg;    // where canvas and decorators draw to, sized by dim
     public PGraphics clippingMask;
     
-    public int opacity;
+    public int tint, opacity;
+    public boolean showSelf, showChildren;
     
     protected ArrayList<uiDecorator> decorations;   // list of decorators
     protected ArrayList<uiCanvas> children;         // nested list of other canvases
@@ -35,6 +36,11 @@ public class uiCanvas implements PConstants{
         pg = app.createGraphics(app.width, app.height);
         clippingMask = app.createGraphics(pg.width, pg.height);
 
+        tint = app.color(255);
+        opacity = 255;
+        showSelf = true;
+        showChildren = true;
+
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
 
@@ -47,6 +53,11 @@ public class uiCanvas implements PConstants{
         shape = ps;
         pg = app.createGraphics(app.width, app.height);
         clippingMask = app.createGraphics(pg.width, pg.height);
+        
+        tint = app.color(255);
+        opacity = 255;
+        showSelf = true;
+        showChildren = true;
 
         decorations = new ArrayList<uiDecorator>();
         children = new ArrayList<uiCanvas>();
@@ -103,39 +114,41 @@ public class uiCanvas implements PConstants{
         return absPos;
     }
 
-    // Positional test - how do
-    public boolean isPointOn(float x, float y){
-        return true;
-    }
-
     // fundamental draw function
     // translates to itself, draws it's decorators, then all children
     public void drawCanvas(float x, float y) {
-        // update clipping mask
-        shape.disableStyle();
-        clippingMask.beginDraw();
-        clippingMask.background(0);
-        clippingMask.noStroke();
-        clippingMask.fill(255);
-        clippingMask.shape(shape,x+pos.x,y+pos.y);
-        clippingMask.endDraw();
+        if(showSelf){
+            // update clipping mask
+            shape.disableStyle();
+            clippingMask.beginDraw();
+            clippingMask.background(0);
+            clippingMask.noStroke();
+            clippingMask.fill(255);
+            clippingMask.shape(shape,x+pos.x,y+pos.y);
+            clippingMask.endDraw();
 
-        // prepare PGraphics buffer, translating to absolute position
-        pg.beginDraw();
-        pg.pushMatrix();
-        pg.translate(x + pos.x, y + pos.y);
-        //draw decorations linearly, which render to canvas's PGraphics
-        for(uiDecorator deco : decorations) {
-            deco.drawDecorator(this);
+            // prepare PGraphics buffer, translating to absolute position
+            pg.beginDraw();
+            pg.clear();
+            pg.pushMatrix();
+            pg.translate(x + pos.x, y + pos.y);
+            // draw decorations linearly, which render to canvas's PGraphics
+            for(uiDecorator deco : decorations) {
+                deco.drawDecorator(this);
+            }
+            pg.popMatrix();
+            pg.endDraw();
+
+            app.tint(tint, opacity);
+            app.image(pg,0,0); //draw self
+            app.noTint();
         }
-        pg.popMatrix();
-        pg.endDraw();
-
-        app.image(pg,0,0); //draw self
 
         //call upon children to call themselves, passing position down tree
-        for(uiCanvas ele : children) {
-          ele.drawCanvas(x + pos.x, y + pos.y);
+        if(showChildren){
+            for(uiCanvas ele : children) {
+                ele.drawCanvas(x + pos.x, y + pos.y);
+            }
         }
         
     }

@@ -5,7 +5,7 @@
 
     "tasks": [
         {
-            "label": "Compile KeyManager TestApp",
+            "label": "Compile Library",
             "type": "shell",
             "group": {
                 "kind": "build",
@@ -29,7 +29,8 @@
                 "src\\frdk\\*.java",
                 "src\\frdk\\input\\*.java",
                 "src\\frdk\\ui\\*.java"
-            ]
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Run TestApp",
@@ -42,7 +43,7 @@
                 "showReuseMessage": true,
                 "clear": false
             },
-            "command": "java -cp \\\"bin;lib/*\\\" frdk\/uiTestApp",
+            "command": "java -cp \\\"bin;lib/*\\\" frdk/uiTestApp",
             "group": {
                 "kind": "test",
                 "isDefault": true

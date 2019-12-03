@@ -71,14 +71,13 @@ public class CanvasPicker{
             currentID += 1;
             drawCanvas(iter.next());
         }
-
         buffer.popMatrix();
     }
 
     public int getID(int x, int y){
         buffer.loadPixels();
-        if((x>=0 && x<buffer.width) && (y>=0 && y<buffer.height)){
-            int c = buffer.pixels[y*buffer.width + x];
+        if((x>=0 && x<buffer.pixelWidth) && (y>=0 && y<buffer.pixelHeight)){
+            int c = buffer.pixels[y*buffer.pixelWidth + x];
             return (c == -1) ? c : c + 16777215;
         } else { return -1; }
     }

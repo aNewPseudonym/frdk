@@ -49,11 +49,11 @@ public class uidPattern extends uiDecorator{
         createPattern();
     }
 
-    private void createPattern(){
+    public void createPattern(){
         PGraphics pb = patternBuffer;
         pb.beginDraw();
 
-        pb.background(0, 0);
+        pb.clear();
 
         float offset = 0;
         for(float j = 0; j<pb.height; j+=spacing.y){
@@ -68,7 +68,7 @@ public class uidPattern extends uiDecorator{
     }
 
     //NOTE: still somewhat concerned about efficiency of this, 
-    //  watch for slowdown when using many patterns
+    //  watch for slowdown when using patterns
     public void drawDecorator(uiCanvas canvas){
         PGraphics pg = canvas.pg;
         pg.pushStyle();
@@ -78,7 +78,7 @@ public class uidPattern extends uiDecorator{
         float shiftY = canvas.pos.y % spacing.y;
 
         pg.image(patternBuffer,shiftX-abs.x,shiftY-abs.y);
-        pg.mask(canvas.clippingMask);
+        //pg.mask(canvas.clippingMask);
 
         pg.popStyle();
     }

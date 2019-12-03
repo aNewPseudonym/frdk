@@ -10,7 +10,7 @@ public class uiWindow extends uiCanvas{
         super(x, y, w, h);
 
         bg = new uidBackground(100);
-        addDecorator(bg);
+        //addDecorator(bg);
         PShape circ = uiCanvas.getApp().createShape(ELLIPSE,0,0,12,12);
         circ.setStroke(false);
         circ.setFill(255);
@@ -39,8 +39,13 @@ public class uiWindow extends uiCanvas{
         rect.setFill(0);
         rect.rotate(PI/4);
         hoverBox.addDecorator(new uidPattern(rect,16,16,2,2,4));
-        hoverBox.addDecorator(new uidBorder(0x00000000, 4));
+        hoverBox.addDecorator(new uidBorder(0xffffd700, 4));
         addChild(hoverBox);
+
+        uiCanvas texTest = new uiCanvas(450,350,200,200);
+        texTest.addDecorator(new uidTexture("frdk/ACCA_7515_V1.jpg"));
+        texTest.addDecorator(new uidBorder(0x00000000, 4));
+        addChild(texTest);
     }
 
 }
