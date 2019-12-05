@@ -60,10 +60,13 @@ public class CanvasPicker{
         ps.disableStyle();
         
         buffer.pushMatrix();
-        buffer.translate(currentCanvas.pos.x, currentCanvas.pos.y);
-
+        
+        PVector absPos = currentCanvas.getAbsolutePosition();
+        buffer.translate(absPos.x, absPos.y);
         buffer.fill(currentID - 16777215);
         buffer.shape(ps);
+
+        buffer.popMatrix();
 
         //call upon children to call themselves
         Iterator<uiCanvas> iter = currentCanvas.getElementIterator();
@@ -71,7 +74,6 @@ public class CanvasPicker{
             currentID += 1;
             drawCanvas(iter.next());
         }
-        buffer.popMatrix();
     }
 
     public int getID(int x, int y){

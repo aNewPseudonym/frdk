@@ -7,7 +7,7 @@ public class uiHoverBox extends uiCanvas implements Selectable{
     public uiHoverBox(int x, int y){
         super(x, y, 100, 100);
         bg = new uidBackground(0xffe2e8dd);
-        //addDecorator(bg);
+        addDecorator(bg);
         isSelected = false;
     }
 

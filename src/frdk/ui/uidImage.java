@@ -20,7 +20,7 @@ public class uidImage extends uiDecorator{
         pg.pushStyle();
 
         pg.image(img,shift.x, shift.y);
-        pg.mask(canvas.clippingMask);
+        canvas.alphaSubtract();
 
         pg.popStyle();
     }

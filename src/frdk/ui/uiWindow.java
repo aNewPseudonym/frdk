@@ -10,7 +10,7 @@ public class uiWindow extends uiCanvas{
         super(x, y, w, h);
 
         bg = new uidBackground(100);
-        //addDecorator(bg);
+        addDecorator(bg);
         PShape circ = uiCanvas.getApp().createShape(ELLIPSE,0,0,12,12);
         circ.setStroke(false);
         circ.setFill(255);

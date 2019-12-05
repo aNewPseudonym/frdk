@@ -50,7 +50,7 @@ public class uidTexture extends uiDecorator{
         PVector abs = canvas.getAbsolutePosition();
 
         pg.image(textureBuffer,shift.x-abs.x,shift.y-abs.y);
-        pg.mask(canvas.clippingMask);
+        canvas.alphaSubtract();
 
         pg.popStyle();
     }
