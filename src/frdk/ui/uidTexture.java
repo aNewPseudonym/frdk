@@ -45,13 +45,9 @@ public class uidTexture extends uiDecorator{
 
     public void drawDecorator(uiCanvas canvas){
         PGraphics pg = canvas.pg;
-        pg.pushStyle();
-
         PVector abs = canvas.getAbsolutePosition();
-
+        
         pg.image(textureBuffer,shift.x-abs.x,shift.y-abs.y);
         canvas.alphaSubtract();
-
-        pg.popStyle();
     }
 }
