@@ -11,7 +11,7 @@ public class uiCanvas implements PConstants{
     public PVector pos;     // either top-left corner, or center
     public PShape shape;    // shape of canvas - RECT by default
     public PGraphics pg;    // where canvas and decorators draw to, sized by dim
-    public PGraphics clippingMask;
+    public PGraphics alphaMask;
     
     public int tint, opacity;
     public boolean showSelf, showChildren;
@@ -34,7 +34,7 @@ public class uiCanvas implements PConstants{
         pos = new PVector(posX, posY);
         shape = app.createShape(RECT,0,0,dimX,dimY);
         pg = app.createGraphics(app.width, app.height);
-        clippingMask = app.createGraphics(pg.width, pg.height);
+        alphaMask = app.createGraphics(pg.width, pg.height);
 
         tint = app.color(255);
         opacity = 255;
@@ -52,7 +52,7 @@ public class uiCanvas implements PConstants{
         pos = new PVector(posX, posY);
         shape = ps;
         pg = app.createGraphics(app.width, app.height);
-        clippingMask = app.createGraphics(pg.width, pg.height);
+        alphaMask = app.createGraphics(pg.width, pg.height);
         
         tint = app.color(255);
         opacity = 255;
@@ -114,24 +114,50 @@ public class uiCanvas implements PConstants{
         return absPos;
     }
 
+    public void alphaSubtract(){
+        pg.loadPixels();
+        alphaMask.loadPixels();
+        if(pg.pixels.length != alphaMask.pixels.length){
+            return;
+        }
+        for(int j = 0; j<pg.height; j++){
+            for(int i = 0; i<pg.width; i++){
+                // get argb values
+                int argb = pg.pixels[(j*pg.width) + i];
+                int a = argb >> 24 & 0xFF;
+                int r = argb >> 16 & 0xFF;
+                int g = argb >> 8 & 0xFF;
+                int b = argb & 0xFF;
+                
+                //grab blue value from mask pixel, 'invert' it's value
+                int maskPixel = alphaMask.pixels[(j*pg.width) + i];
+                int alphaShift = 0xFF - (maskPixel & 0xFF);
+            
+                // subtract alphaShift from pixel's alpha value;
+                pg.pixels[(j*pg.width) + i] = app.color(r,g,b,a-alphaShift);
+            }
+        }
+        pg.updatePixels();
+    }
+
     // fundamental draw function
     // translates to itself, draws it's decorators, then all children
     public void drawCanvas(float x, float y) {
         if(showSelf){
             // update clipping mask
             shape.disableStyle();
-            clippingMask.beginDraw();
-            clippingMask.background(0);
-            clippingMask.noStroke();
-            clippingMask.fill(255);
-            clippingMask.shape(shape,x+pos.x,y+pos.y);
-            clippingMask.endDraw();
+            alphaMask.beginDraw();
+            alphaMask.background(0);
+            alphaMask.noStroke();
+            alphaMask.fill(255);
+            alphaMask.shape(shape, x+pos.x, y+pos.y);
+            alphaMask.endDraw();
 
             // prepare PGraphics buffer, translating to absolute position
             pg.beginDraw();
             pg.clear();
             pg.pushMatrix();
-            pg.translate(x + pos.x, y + pos.y);
+            pg.translate(x+pos.x, y+pos.y);
             // draw decorations linearly, which render to canvas's PGraphics
             for(uiDecorator deco : decorations) {
                 deco.drawDecorator(this);

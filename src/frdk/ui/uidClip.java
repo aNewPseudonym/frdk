@@ -1,7 +1,5 @@
 package frdk.ui;
 
-import processing.core.*;
-
 public class uidClip extends uiDecorator{
     public boolean clip;
 
@@ -14,7 +12,6 @@ public class uidClip extends uiDecorator{
     }
 
     public void drawDecorator(uiCanvas canvas){
-        PGraphics pg = canvas.pg;
-        pg.mask(canvas.clippingMask);
+        canvas.alphaSubtract();
     }
 }

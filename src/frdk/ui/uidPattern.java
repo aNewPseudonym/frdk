@@ -78,7 +78,7 @@ public class uidPattern extends uiDecorator{
         float shiftY = canvas.pos.y % spacing.y;
 
         pg.image(patternBuffer,shiftX-abs.x,shiftY-abs.y);
-        //pg.mask(canvas.clippingMask);
+        canvas.alphaSubtract();
 
         pg.popStyle();
     }

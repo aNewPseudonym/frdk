@@ -27,7 +27,7 @@ public class uiTestApp extends PApplet{
 
     public void draw() {
         background(200);
-        myCanvas.drawCanvas(25,25);
+        myCanvas.drawCanvas(0,0);
 
         checkSelectables(myCanvas, mouseX, mouseY);
     }
