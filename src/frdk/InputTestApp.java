@@ -3,7 +3,7 @@ package frdk;
 import frdk.input.*;
 import processing.core.*;
 
-public class InputTestApp extends PApplet{
+public class inputTestApp extends PApplet{
 
     KeyManager myManager;
     int count;

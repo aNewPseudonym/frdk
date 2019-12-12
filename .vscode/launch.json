@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - geomTestApp",
+            "request": "launch",
+            "mainClass": "frdk.geomTestApp",
+            "projectName": "frdk_efb1f3bb"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - uiTestApp",
             "request": "launch",
             "mainClass": "frdk.uiTestApp",

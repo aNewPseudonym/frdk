@@ -2,7 +2,7 @@ package frdk.geom;
 
 import processing.core.*;
 
-public abstract class FShape{
+public abstract class FShape implements PConstants{
     public float width, height;
 
     public abstract void draw(PGraphics pg);
@@ -32,7 +32,20 @@ public abstract class FShape{
     sizing/fitting
         center, centerAt
         fitTo
-        
-
+    
     */
+
+    abstract public float getWidth();
+    abstract public float getHeight();
+    abstract public PVector getCenter();
+    abstract public PVector getCentroid();
+
+    abstract public void translate(PVector t);
+    abstract public void scale(float s);
+    abstract public void scaleAbout(PVector center,float s);
+    abstract public void rotate(float rad);
+    abstract public void rotateAbout(PVector center, float rad);
+
+    //abstract public void centerSelf();
+
 }
