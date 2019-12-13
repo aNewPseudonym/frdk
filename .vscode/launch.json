@@ -9,6 +9,13 @@
             "name": "CodeLens (Launch) - geomTestApp",
             "request": "launch",
             "mainClass": "frdk.geomTestApp",
+            "projectName": "frdk_2ac8cc55"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - geomTestApp",
+            "request": "launch",
+            "mainClass": "frdk.geomTestApp",
             "projectName": "frdk_efb1f3bb"
         },
         {

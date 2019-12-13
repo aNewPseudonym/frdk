@@ -11,13 +11,7 @@ public abstract class FShape implements PConstants{
     /*
     useful functions:
 
-    boolean functions: intersect, diff, union, xor
-        returns new fshape
-
-    intersection functions
-        FShape/FShape
-        FShape/line
-        FShape/ray
+    Copy function!
     
     transforms - use PVector functionality...
         translate
@@ -35,10 +29,13 @@ public abstract class FShape implements PConstants{
     
     */
 
+    abstract public PVector[] getVerts();
+    abstract public int vertCount();
+
     abstract public float getWidth();
     abstract public float getHeight();
-    abstract public PVector getCenter();
     abstract public PVector getCentroid();
+    abstract public PVector getMidpoint();
 
     abstract public void translate(PVector t);
     abstract public void scale(float s);
@@ -46,6 +43,7 @@ public abstract class FShape implements PConstants{
     abstract public void rotate(float rad);
     abstract public void rotateAbout(PVector center, float rad);
 
-    //abstract public void centerSelf();
+    abstract public void centerAt(float centerX, float centerY);
+    abstract public void centerSelf();
 
 }

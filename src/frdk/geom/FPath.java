@@ -49,6 +49,15 @@ public class FPath extends FShape{
         }
     }
 
+    //--- QUERY ---
+    public PVector[] getVerts(){
+        return verts;
+    }
+    public int vertCount(){
+        return verts.length;
+    }
+
+    //--- MEASURING ---
     public float getWidth(){
         float low, high;
         if(verts.length > 1){
@@ -93,7 +102,7 @@ public class FPath extends FShape{
         return (sum.div(verts.length));
     }
     // returns center of extreme points
-    public PVector getCenter(){
+    public PVector getMidpoint(){
         float lowX, highX, lowY, highY;
         if(verts.length > 1){
             lowX = verts[0].x;
@@ -114,6 +123,22 @@ public class FPath extends FShape{
         return new PVector( (highX+lowX)/2, (highY+lowY)/2 );
     }
 
+    //--- ALIGNING ---
+    public void centerAt(float centerX, float centerY){
+        PVector shift = new PVector(centerX, centerY);
+        shift.sub(getMidpoint());
+        for(int i = 0; i < verts.length; i++){
+            verts[i].add(shift);
+        }
+    }
+    public void centerSelf(){
+        PVector shift = getMidpoint();
+        for(int i = 0; i < verts.length; i++){
+            verts[i].sub(shift);
+        }
+    }
+
+    //--- TRANSFORMING ---
     public void translate(PVector t){
         for(int i = 0; i < verts.length; i++){
             verts[i].add(t);
