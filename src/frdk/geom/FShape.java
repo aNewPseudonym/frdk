@@ -3,47 +3,43 @@ package frdk.geom;
 import processing.core.*;
 
 public abstract class FShape implements PConstants{
-    public float width, height;
-
     public abstract void draw(PGraphics pg);
     public abstract void draw(PApplet app);
 
-    /*
-    useful functions:
-
-    Copy function!
+    /*  
+    FUNCTIONS TO ADD
     
-    transforms - use PVector functionality...
-        translate
-        scale, scaleFrom
-        rotate, rotateAbout(Point)
+    TRANSFORMS
+        scaleX/scaleY
+        scaleSelf, rotateSelf -> from centroid
+        skew? twist? not really necessary...
         offset
 
-    align
+    ALIGNING
+        fitTo/fitXTo/fitYTo
         vertAlign, horzAlign
         vertDistribute, horzDistribute
-
-    sizing/fitting
-        center, centerAt
-        fitTo
-    
     */
 
+    //--- QUERY ---
     abstract public PVector[] getVerts();
     abstract public int vertCount();
 
+    //--- MEASURING ---
     abstract public float getWidth();
     abstract public float getHeight();
     abstract public PVector getCentroid();
     abstract public PVector getMidpoint();
 
-    abstract public void translate(PVector t);
-    abstract public void scale(float s);
-    abstract public void scaleAbout(PVector center,float s);
-    abstract public void rotate(float rad);
-    abstract public void rotateAbout(PVector center, float rad);
-
+    //--- ALIGNING ---
     abstract public void centerAt(float centerX, float centerY);
     abstract public void centerSelf();
+
+    //--- TRANSFORMS ---
+    abstract public void translate(float x, float y);
+    abstract public void scale(float s);
+    abstract public void scaleAbout(float centerX, float centerY,float s);
+    abstract public void rotate(float rad);
+    abstract public void rotateAbout(float centerX, float centerY, float rad);
 
 }

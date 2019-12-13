@@ -6,25 +6,22 @@ public class FPath extends FShape{
     private PVector[] verts;
     public boolean isClosed;
 
-    /*constructors for:
-    empty FShape,
-    SVG parse,
-    PShape parse?,
-    ellipse dimensions,
-    vertex array - closed/open
-    */
     public FPath(){
         verts = new PVector[0];
         isClosed = false;
     }
-
     public FPath(PVector[] verts, boolean isClosed){
         this.verts = new PVector[0];
         appendVertArray(verts);
         this.isClosed = isClosed;
     }
+    public FPath(FPath toCopy){
+        this.verts = new PVector[0];
+        appendVertArray(toCopy.getVerts());
+        this.isClosed = toCopy.isClosed;
+    }
 
-    //draw
+    //--- DRAW ---
     public void draw(PGraphics pg){
         pg.beginShape();
         for(int i = 0; i < verts.length; i++){
@@ -55,6 +52,51 @@ public class FPath extends FShape{
     }
     public int vertCount(){
         return verts.length;
+    }
+    public PVector getVertex(int index){
+        if(index >= 0 && index < verts.length){
+            return verts[index];
+        } else {
+            return null;
+        }
+    }
+
+    //--- MANIPULATE VERTICES ---
+    public void appendVertex(PVector v){
+        PVector[] newVerts = new PVector[verts.length + 1];
+        System.arraycopy(verts, 0, newVerts, 0, verts.length);
+        newVerts[verts.length] = v.copy();
+        verts = newVerts;
+    }
+    public void appendVertArray(PVector[] va){
+        PVector[] newVerts = new PVector[verts.length + va.length];
+        System.arraycopy(verts, 0, newVerts, 0, verts.length);
+        for(int i = 0; i < va.length; i++){
+            newVerts[i+verts.length] = va[i].copy();
+        }
+        verts = newVerts;
+    }
+    public void insertVertex(PVector v, int index){
+        if(index < 0 || index >= verts.length){
+            return;
+        }
+        PVector[] newVerts = new PVector[verts.length + 1];
+        System.arraycopy(verts, 0, newVerts, 0, index);
+        newVerts[index] = v.copy();
+        System.arraycopy(verts, index, newVerts, index+1, verts.length-index);
+        verts = newVerts;
+    }
+    public void insertVertArray(PVector[] va, int index){
+        if(index < 0 || index >= verts.length){
+            return;
+        }
+        PVector[] newVerts = new PVector[verts.length + va.length];
+        System.arraycopy(verts, 0, newVerts, 0, index);
+        for(int i = 0; i < va.length; i++){
+            newVerts[i+index] = va[i].copy();
+        }
+        System.arraycopy(verts, index, newVerts, index+va.length, verts.length-index);
+        verts = newVerts;
     }
 
     //--- MEASURING ---
@@ -139,9 +181,9 @@ public class FPath extends FShape{
     }
 
     //--- TRANSFORMING ---
-    public void translate(PVector t){
+    public void translate(float x, float y){
         for(int i = 0; i < verts.length; i++){
-            verts[i].add(t);
+            verts[i].add(x, y);
         }
     }
     public void scale(float s){
@@ -149,11 +191,11 @@ public class FPath extends FShape{
             verts[i].mult(s);
         }
     }
-    public void scaleAbout(PVector center, float s){
+    public void scaleAbout(float centerX, float centerY, float s){
         for(int i = 0; i < verts.length; i++){
-            verts[i].sub(center);
+            verts[i].sub(centerX, centerY);
             verts[i].mult(s);
-            verts[i].add(center);
+            verts[i].add(centerX, centerY);
         }
     }
     public void rotate(float rad){
@@ -161,58 +203,11 @@ public class FPath extends FShape{
             verts[i].rotate(rad);
         }
     }
-    public void rotateAbout(PVector center, float rad){
+    public void rotateAbout(float centerX, float centerY, float rad){
         for(int i = 0; i < verts.length; i++){
-            verts[i].sub(center);
+            verts[i].sub(centerX, centerY);
             verts[i].rotate(rad);
-            verts[i].add(center);
-        }
-    }
-
-    //appendVerts
-    public void appendVertex(PVector v){
-        PVector[] newVerts = new PVector[verts.length + 1];
-        System.arraycopy(verts, 0, newVerts, 0, verts.length);
-        newVerts[verts.length + 1] = v;
-        verts = newVerts;
-    }
-
-    public void appendVertArray(PVector[] va){
-        PVector[] newVerts = new PVector[verts.length + va.length];
-        System.arraycopy(verts, 0, newVerts, 0, verts.length);
-        System.arraycopy(va, 0, newVerts, verts.length, va.length);
-        verts = newVerts;
-    }
-
-    //insertVerts
-    public void insertVertex(PVector v, int index){
-        if(index < 0 || index >= verts.length){
-            return;
-        }
-        PVector[] newVerts = new PVector[verts.length + 1];
-        System.arraycopy(verts, 0, newVerts, 0, index);
-        newVerts[index] = v;
-        System.arraycopy(verts, index, newVerts, index+1, verts.length-index);
-        verts = newVerts;
-    }
-
-    public void insertVertArray(PVector[] va, int index){
-        if(index < 0 || index >= verts.length){
-            return;
-        }
-        PVector[] newVerts = new PVector[verts.length + va.length];
-        System.arraycopy(verts, 0, newVerts, 0, index);
-        System.arraycopy(va, 0, newVerts, index, va.length);
-        System.arraycopy(verts, index, newVerts, index+va.length, verts.length-index);
-        verts = newVerts;
-    }
-
-    //getVert
-    public PVector getVertex(int index){
-        if(index >= 0 && index < verts.length){
-            return verts[index];
-        } else {
-            return null;
+            verts[i].add(centerX, centerY);
         }
     }
 }

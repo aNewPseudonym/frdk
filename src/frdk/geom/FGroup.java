@@ -7,8 +7,16 @@ import processing.core.*;
 public class FGroup extends FShape{
     private FShape[] children;
 
-    //CONSTRUCTORS
+    //--- CONSTRUCTORS ---
+    public FGroup(){
+        children = new FShape[0];
+    }
+    public FGroup(FShape[] shapeGroup){
+        children = new FShape[shapeGroup.length];
+        System.arraycopy(shapeGroup, 0, children, 0, shapeGroup.length);
+    }
 
+    //--- DRAW ---
     public void draw(PGraphics pg){
         for(int i = 0; i < children.length; i++){
             children[i].draw(pg);
@@ -19,6 +27,20 @@ public class FGroup extends FShape{
         for(int i = 0; i < children.length; i++){
             children[i].draw(app);
         }
+    }
+
+    //--- CHILD MANIPULATION (lol) ---
+    public void appendChild(FShape newShape){
+        FShape[] newChildren = new FShape[children.length + 1];
+        System.arraycopy(children, 0, newChildren, 0, children.length);
+        newChildren[children.length] = newShape;
+        children = newChildren;
+    }
+    public void appendChildren(FShape[] newShapes){
+        FShape[] newChildren = new FShape[children.length + newShapes.length];
+        System.arraycopy(children, 0, newChildren, 0, children.length);
+        System.arraycopy(newShapes, 0, newChildren, children.length, newShapes.length);
+        children = newChildren;
     }
 
     //--- QUERY ---
@@ -48,14 +70,11 @@ public class FGroup extends FShape{
         float high = 0;
         for(int i = 0; i < children.length; i++){
             PVector[] verts = children[i].getVerts();
-            if(verts.length > 1){
+            if( (i == 0) && (verts.length > 1) ){
                 low = verts[0].x;
                 high = verts[0].x;
-            } else {
-                return 0.0f;
             }
-
-            for(int j = 1; j < verts.length; j++){
+            for(int j = 0; j < verts.length; j++){
                 if(verts[j].x < low){ low = verts[j].x; }
                 if(verts[j].x > high){ high = verts[j].x; }
             }
@@ -67,14 +86,11 @@ public class FGroup extends FShape{
         float high = 0;
         for(int i = 0; i < children.length; i++){
             PVector[] verts = children[i].getVerts();
-            if(verts.length > 1){
+            if( (i == 0) && (verts.length > 1) ){
                 low = verts[0].y;
                 high = verts[0].y;
-            } else {
-                return 0.0f;
             }
-
-            for(int j = 1; j < verts.length; j++){
+            for(int j = 0; j < verts.length; j++){
                 if(verts[j].y < low){ low = verts[j].y; }
                 if(verts[j].y > high){ high = verts[j].y; }
             }
@@ -97,20 +113,17 @@ public class FGroup extends FShape{
         float highY = 0;
         for(int i = 0; i < children.length; i++){
             PVector[] verts = children[i].getVerts();
-            if(verts.length > 1){
+            if( (i == 0) && (verts.length > 1) ){
                 lowX = verts[0].x;
                 highX = verts[0].x;
                 lowY = verts[0].y;
                 highY = verts[0].y;
-            } else {
-                return null;
             }
-
-            for(int j = 1; j < verts.length; j++){
-                if(verts[i].x < lowX){ lowX = verts[i].x; }
-                if(verts[i].x > highX){ highX = verts[i].x; }
-                if(verts[i].y < lowY){ lowY = verts[i].y; }
-                if(verts[i].y > highY){ highY = verts[i].y; }
+            for(int j = 0; j < verts.length; j++){
+                if(verts[j].x < lowX){ lowX = verts[j].x; }
+                if(verts[j].x > highX){ highX = verts[j].x; }
+                if(verts[j].y < lowY){ lowY = verts[j].y; }
+                if(verts[j].y > highY){ highY = verts[j].y; }
             }
         }
         return new PVector( (highX+lowX)/2, (highY+lowY)/2 );
@@ -118,22 +131,24 @@ public class FGroup extends FShape{
 
     //--- ALIGNING ---
     public void centerAt(float centerX, float centerY){
+        PVector shift = new PVector(centerX, centerY);
+        shift.sub(getMidpoint());
         for(int i = 0; i < children.length; i++){
-            //centerAt(somewhere...)
-            //children[i].translate(t);
+            children[i].translate(shift.x, shift.y);
         }
     }
     public void centerSelf(){
+        PVector center = getMidpoint();
+        center.mult(-1);
         for(int i = 0; i < children.length; i++){
-            //centerAt(somewhere...)
-            //children[i].translate(t);
+            children[i].translate(center.x, center.y);
         }
     }
     
     //--- TRANSFORMS ---
-    public void translate(PVector t){
+    public void translate(float x, float y){
         for(int i = 0; i < children.length; i++){
-            children[i].translate(t);
+            children[i].translate(x, y);
         }
     }
     public void scale(float s){
@@ -141,9 +156,9 @@ public class FGroup extends FShape{
             children[i].scale(s);
         }
     }
-    public void scaleAbout(PVector center, float s){
+    public void scaleAbout(float centerX, float centerY, float s){
         for(int i = 0; i < children.length; i++){
-            children[i].scaleAbout(center, s);
+            children[i].scaleAbout(centerX, centerY, s);
         }
     }
     public void rotate(float rad){
@@ -151,9 +166,9 @@ public class FGroup extends FShape{
             children[i].rotate(rad);
         }
     }
-    public void rotateAbout(PVector center, float rad){
+    public void rotateAbout(float centerX, float centerY, float rad){
         for(int i = 0; i < children.length; i++){
-            children[i].rotateAbout(center, rad);
+            children[i].rotateAbout(centerX, centerY, rad);
         }
     }
 
