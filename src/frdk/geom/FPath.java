@@ -3,22 +3,23 @@ package frdk.geom;
 import processing.core.*;
 
 public class FPath extends FShape{
-    private PVector[] verts;
-    public boolean isClosed;
+    protected PVector[] verts;
 
+    //--- CONSTRUCTORS ---
     public FPath(){
         verts = new PVector[0];
-        isClosed = false;
     }
-    public FPath(PVector[] verts, boolean isClosed){
+    public FPath(PVector[] verts){
         this.verts = new PVector[0];
         appendVertArray(verts);
-        this.isClosed = isClosed;
     }
     public FPath(FPath toCopy){
         this.verts = new PVector[0];
         appendVertArray(toCopy.getVerts());
-        this.isClosed = toCopy.isClosed;
+    }
+    // helpful copy function
+    public FPath copy(){
+        return new FPath(this);
     }
 
     //--- DRAW ---
@@ -27,22 +28,24 @@ public class FPath extends FShape{
         for(int i = 0; i < verts.length; i++){
             pg.vertex(verts[i].x, verts[i].y);
         }
-        if(isClosed){
-            pg.endShape(CLOSE);
-        } else {
-            pg.endShape();
-        }
+        pg.endShape();
     }
-
     public void draw(PApplet app){
         app.beginShape();
         for(int i = 0; i < verts.length; i++){
             app.vertex(verts[i].x, verts[i].y);
         }
-        if(isClosed){
-            app.endShape(CLOSE);
-        } else {
-            app.endShape();
+        app.endShape();
+    }
+    // used by FPolygon
+    protected void contribute(PGraphics pg){
+        for(int i = 0; i < verts.length; i++){
+            pg.vertex(verts[i].x, verts[i].y);
+        }
+    }
+    protected void contribute(PApplet app){
+        for(int i = 0; i < verts.length; i++){
+            app.vertex(verts[i].x, verts[i].y);
         }
     }
 
@@ -59,6 +62,44 @@ public class FPath extends FShape{
         } else {
             return null;
         }
+    }
+    public int findLowest(){
+        int lowest;
+        if(verts.length > 1){
+            lowest = 0;
+        } else {
+            return -1;
+        }
+
+        for(int i = 1; i < verts.length; i++){
+            if(verts[i].y < verts[lowest].y){ lowest = i; }
+            if(verts[i].y == verts[lowest].y){
+                if( verts[i].x < verts[lowest].x ){
+                    lowest = i;
+                }
+            }
+        }
+
+        return lowest;
+    }
+    public int findHighest(){
+        int highest;
+        if(verts.length > 1){
+            highest = 0;
+        } else {
+            return -1;
+        }
+
+        for(int i = 1; i < verts.length; i++){
+            if(verts[i].y > verts[highest].y){ highest = i; }
+            if(verts[i].y == verts[highest].y){
+                if( verts[i].x > verts[highest].x ){
+                    highest = i;
+                }
+            }
+        }
+
+        return highest;
     }
 
     //--- MANIPULATE VERTICES ---
@@ -97,6 +138,49 @@ public class FPath extends FShape{
         }
         System.arraycopy(verts, index, newVerts, index+va.length, verts.length-index);
         verts = newVerts;
+    }
+
+    //--- DIRECTIONALITY ---
+    public void reverse(){
+        PVector temp;
+        for(int i = 0; i < verts.length/2; i++){
+            temp = verts[i];
+            verts[i] = verts[verts.length - (i+1)];
+            verts[verts.length - (i+1)] = temp;
+        }
+    }
+    public boolean isCW(){
+        int index = findLowest();
+        PVector lowest = verts[index];
+        PVector prev = verts[(((index - 1) % verts.length) + verts.length) % verts.length ];
+        PVector next = verts[(index + 1) % verts.length];
+
+        PVector toPrev = PVector.sub(prev, lowest);
+        PVector toNext = PVector.sub(next, lowest);
+
+        PVector cross = toPrev.cross(toNext);
+
+        if(cross.z >= 0){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    public void confirmCW(){
+        if( isCW() ){
+            return;
+        } else {
+            reverse();
+            return;
+        }
+    }
+    public void confirmCCW(){
+        if( isCW() ){
+            reverse();
+            return;
+        } else {
+            return;
+        }
     }
 
     //--- MEASURING ---

@@ -2,17 +2,42 @@ package frdk;
 
 import frdk.geom.*;
 import processing.core.*;
+import java.util.ArrayList;
 
 public class geomTestApp extends PApplet{
     
     FShape shape;
     FGroup group;
+    FPolygon cursor;
+
+    PVector[] circVerts = {
+        new PVector(100,0),
+        new PVector(70.7f,-70.7f),
+        new PVector(0,-100),
+        new PVector(-70.7f,-70.7f),
+        new PVector(-100,0),
+        new PVector(-70.7f,70.7f),
+        new PVector(0,100),
+        new PVector(70.7f,70.7f),
+    };
     PVector[] boxVerts = {
         new PVector(100,100),
         new PVector(200,100),
         new PVector(225,225),
         new PVector(100,200),
-        };
+    };
+    PVector[] contourVerts = {
+        new PVector(125,125),
+        new PVector(175,125),
+        new PVector(175,175),
+        new PVector(125,175),
+    };
+    PVector[] secondContourVerts = {
+        new PVector(140,140),
+        new PVector(160,140),
+        new PVector(160,160),
+        new PVector(140,160),
+    };
 
     public static void main(String[] args) {
         PApplet.main("frdk.geomTestApp");
@@ -26,19 +51,22 @@ public class geomTestApp extends PApplet{
     public void setup() {
         group = new FGroup();
 
-        shape = new FPath(boxVerts,true);
+        shape = new FPolygon(boxVerts);
         shape.centerAt(width/2, height/2);
         group.appendChild(shape);
 
         boxVerts[2].sub(25, 25);
-        group.appendChild(new FPath(boxVerts, true));
+        FPolygon hasHole = new FPolygon(boxVerts);
+        hasHole.addContour(contourVerts);
+        hasHole.addContour(secondContourVerts);
+        group.appendChild(hasHole);
         group.centerAt(width/2, height/2);
+
+        cursor = new FPolygon(circVerts);
     }
 
     public void draw() {
         background(200);
-        pushMatrix();
-        //translate(width/2, height/2);
 
         group.rotateAbout(width/2, height/2, 0.01f);
 
@@ -68,7 +96,37 @@ public class geomTestApp extends PApplet{
         noFill();
         rect(mid.x, mid.y, w+5, h+5);
 
-        popMatrix();
+        
+        cursor.centerAt(mouseX, mouseY);
+        noFill();
+        strokeWeight(4);
+        stroke(0);
+        for(int i = 0; i < group.childCount(); i++){
+            FShape child = group.getChild(i);
+            if(child instanceof FPolygon){
+                if(FG.pointInPoly( new PVector(mouseX, mouseY), (FPolygon)child )){
+                    stroke(0xff5e73d1);
+                }
+            }
+        }
+        cursor.draw(this);
+
+        ArrayList<PVector> allInts = new ArrayList<PVector>();
+        PVector[] intPoints = new PVector[0];
+        for(int i = 0; i < group.childCount(); i++){
+            FShape child = group.getChild(i);
+            if(child instanceof FPolygon){
+                intPoints = FG.polyPolyIntersection(cursor, (FPolygon)child);
+                println(intPoints.length);
+            }
+            for(int j = 0; j < intPoints.length; j++){
+                allInts.add(intPoints[j]);
+            }
+        }
+        for(PVector p : allInts){
+            fill(0xffff0000);
+            ellipse(p.x, p.y, 6, 6);
+        }
     }
 
 }

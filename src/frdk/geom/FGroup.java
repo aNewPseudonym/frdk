@@ -11,10 +11,6 @@ public class FGroup extends FShape{
     public FGroup(){
         children = new FShape[0];
     }
-    public FGroup(FShape[] shapeGroup){
-        children = new FShape[shapeGroup.length];
-        System.arraycopy(shapeGroup, 0, children, 0, shapeGroup.length);
-    }
 
     //--- DRAW ---
     public void draw(PGraphics pg){
@@ -44,6 +40,16 @@ public class FGroup extends FShape{
     }
 
     //--- QUERY ---
+    public FShape getChild(int index){
+        FShape child = null;
+        if(index > -1 && index < children.length){
+            child = children[index];
+        }
+        return child;
+    }
+    public int childCount(){
+        return children.length;
+    }
     public PVector[] getVerts(){
         int totalVerts = vertCount();
         PVector[] allVerts = new PVector[totalVerts];
