@@ -9,7 +9,6 @@ public class FPolygon extends FShape{
     //--- CONSTRUCTORS ---
     public FPolygon(){
         bound = new FPath();
-        bound.confirmCW();
         contours = new FPath[0];
     }
     public FPolygon(PVector[] verts){
@@ -47,6 +46,9 @@ public class FPolygon extends FShape{
 
     //--- MANIPULATE ---
     public void addContour(FPath contour){
+        if(contour.vertCount() < 3){
+            return;
+        }
         FPath[] newContours = new FPath[contours.length + 1];
         System.arraycopy(contours, 0, newContours, 0, contours.length);
         newContours[contours.length] = new FPath(contour);
@@ -72,7 +74,7 @@ public class FPolygon extends FShape{
             return null;
         }
     }
-    public int getContourCount(){
+    public int contourCount(){
         return contours.length;
     }
     public PVector[] getVerts(){
