@@ -25,68 +25,26 @@ import java.util.ArrayList;
 
 public class FG{
 
+    //--- INTERSECTION FLAGS ---//
     static final int NO_INTERSECTION = 0;
+    // non-parallel cases
     static final int X_INTERSECTION = 1;    //at mid of ab and cd, most common
-
     static final int T1_INTERSECTION = 2;   //at start of ab
     static final int T2_INTERSECTION = 3;   //at start of cd
+    static final int V_INTERSECTION = 4;    //at start of ab and cd
+    // colinear cases
+    static final int X_OVERLAP = 5;         //both start on line
+    static final int T1_OVERLAP = 6;        //a on cd
+    static final int T2_OVERLAP = 7;        //c on ab
+    static final int V_OVERLAP = 8;         //a and c share start point
 
-    static final int V_INTERSECTION = 4;   // at start of ab and cd
-
-    static final int X_OVERLAP = 5;
-    static final int T1_OVERLAP = 6;
-    static final int T2_OVERLAP = 7;
-    static final int V_OVERLAP = 8;
+    //--- SIDE FLAGS ---//
+    static final int ON = 0;
+    static final int LEFT = 1;
+    static final int RIGHT = 2;
 
     static float epsilon = .0000f;  //accuracy range of calculations, tinker with for best results
-    static PVector testDir = new PVector(1, 0);
-
-    //calculation for boolean operations
-    //NOTE: does not cover all possible intersection cases, just the ones I'm looking for
-    private static int intersectionTest(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
-        PVector ab = new PVector(b.x - a.x, b.y - a.y);
-        PVector cd = new PVector(d.x - c.x, d.y - c.y);
-        
-        //based on equation:
-        //ab * t + a = cd * u + c , which leads to:
-        //(cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y)) = t * ((ab.y * cd.x) - (ab.x * cd.y))
-        //(ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y)) = u * ((ab.y * cd.x) - (ab.x * cd.y)) 
-
-        float t = (cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y));  //if this == 0, lines are parallel
-        float u = (ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y));
-
-        // non-parallel cases:
-        if( PApplet.abs(t) > 0 ) {
-            t = t / ((ab.y * cd.x) - (ab.x * cd.y));  //complete t calculation
-            u = u / ((ab.y * cd.x) - (ab.x * cd.y));  //complete u calculation
-
-            intPoint.set( (ab.x * t) + a.x, (ab.y * t) + a.y);
-
-            if(t > 0 && t < 1 && u > 0 && u < 1) {
-                return X_INTERSECTION;
-            }
-            if(t == 0 && u > 0 && u < 1){
-                return T1_INTERSECTION;
-            }
-            if(t > 0 && t < 1 && u == 0){
-                return T2_INTERSECTION;
-            }
-            if(t == 0 && u == 0){
-                return V_INTERSECTION;
-            }
-        }
-        // parallel cases:
-        else {
-            PVector ac = new PVector(c.x - a.x, c.y - a.y);
-            t = PVector.dot(ac, ab) / PVector.dot(ab, ab);
-            PVector ca = new PVector(a.x - c.x, a.y - c.y);
-            u = PVector.dot(ca, cd) / PVector.dot(cd, cd);
-            //FINISH OVERLAP CASES HERE ^^^
-        }
-    //no intersection
-    intPoint = null;
-    return NO_INTERSECTION;
-    }
+    static PVector testDir = new PVector(1.0f, 0.1f);
 
     //returns true if line a-b intersects line c-d
     //intersection point stored in intPoint
@@ -150,11 +108,11 @@ public class FG{
                 float dotProduct = PVector.dot(cd, c_int);
                 if(dotProduct > 0 && dotProduct < cd.magSq()) {
                     return true;
-                } else if(PVector.dist(intPoint, c) < epsilon || 
-                        PVector.dist(intPoint, d) < epsilon ){
-                    //finally, to account for edges, this algorithm is slightly generous
-                    return true;
-                }
+                } 
+                // else if(PVector.dist(intPoint, c) < epsilon || PVector.dist(intPoint, d) < epsilon ){
+                //     //finally, to account for edges, this algorithm is slightly generous
+                //     return true;
+                // }
             }
         }
         return false;
@@ -310,23 +268,34 @@ public class FG{
 
     //--- FOR BOOLEAN OPERATIONS ---
 
-    private static Node initNodeChain(FPath path){
-        int lowest = path.findLowest();
-        Node startNode = new Node( path.getVertex(lowest) );
+    //Should this be FShape/FShape intersection? Eventually...
+    public static FPolygon booleanOp(FPolygon subj, FPolygon obj, PApplet app){
+        FPolygon result = new FPolygon();
 
-        Node currentVertex = startNode;
-        for(int i = 1; i < path.vertCount(); i++){
-            currentVertex.next = new Node(path.getVertex( (lowest + i) % path.vertCount() ));
-            currentVertex.next.prev = currentVertex;
-            currentVertex = currentVertex.next;
-        }
-        currentVertex.next = startNode;
+        //0 - Initialize Node Chain
+        ArrayList<Node> subjNodes = initNodes(subj);
+        ArrayList<Node> objNodes = initNodes(obj);
 
-        return startNode;
+        //1 - Intersection Phase
+        initIntersections(subjNodes, objNodes);
+
+        //2 - Labeling Phase
+        labelNodes_crossings(subjNodes, objNodes);
+
+        labelNodes_entries(subjNodes, obj);
+        labelNodes_entries(objNodes, subj);
+
+        //3 - Tracing Phase
+        result = trace_and(subjNodes, objNodes);
+
+        drawNodes(subjNodes, app, 2.0f);
+        drawNodes(objNodes, app, 1.0f);
+
+        return result;
     }
 
     private static ArrayList<Node> initNodes(FPolygon poly){
-        ArrayList<Node> nodes = new ArrayList<Node>();  //I can't think of a better var name...
+        ArrayList<Node> nodes = new ArrayList<Node>();
         
         nodes.add(initNodeChain(poly.getBound()));
 
@@ -337,34 +306,25 @@ public class FG{
         return nodes;
     }
 
-    private static void checkIntersections(Node a, Node b, Node objStart, Node c){
-        Node d = c.next;
-        do{
-            PVector intPoint = new PVector();
-            if(lineToLine(a.pos, b.pos, c.pos, d.pos, intPoint)){
-                Node vSubj = new Node(intPoint);
-                Node vObj = new Node(intPoint);
-                vSubj.intersect(vObj);
-                vObj.intersect(vSubj);
-    
-                a.next = vSubj;
-                vSubj.prev = a;
-                b.prev = vSubj;
-                vSubj.next = b;
-                
-                c.next = vObj;
-                vObj.prev = c;
-                d.prev = vObj;
-                vObj.next = d;
+    private static Node initNodeChain(FPath path){
+        int lowest = path.findLowest();
+        Node startNode = new Node( path.getVertex(lowest) );
+        startNode.next = startNode;
+        startNode.prev = startNode;
 
-                checkIntersections(a, vSubj, objStart, d);
-                checkIntersections(vSubj, b, objStart, d);
+        Node currentNode = startNode;
+        for(int i = 1; i < path.vertCount(); i++){
+            Node newNode = new Node( path.getVertex( (lowest + i) % path.vertCount() ) );
+            newNode.next = currentNode.next;
+            newNode.next.prev = newNode;
 
-                return;
-            }
-            c = d;
-            d = d.next;
-        } while( c != objStart );
+            currentNode.next = newNode;
+            newNode.prev = currentNode;
+            currentNode = currentNode.next;
+        }
+        currentNode.next = startNode;
+
+        return startNode;
     }
 
     private static void initIntersections(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
@@ -373,136 +333,461 @@ public class FG{
             Node b = a.next;
             do{
                 for(Node objStart : objNodes){
+                    b = a.next;
+                    //test this segment against all object Node chains
                     checkIntersections(a, b, objStart, objStart);
                 }
-                a = b;
-                b = b.next;
+                // increment segment
+                a = a.next;
+                b = a.next;
             } while( a != subjStart );
         }
     }
 
-    private static void labelNodes(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
+    private static void checkIntersections(Node a, Node b, Node objStart, Node c){
+        Node d = c.next;
+        do{
+            PVector intPoint = new PVector();
+            int type = intersectionTest(a.pos, b.pos, c.pos, d.pos, intPoint);
+
+            Node subjInt, objInt;
+
+            switch(type){
+                case NO_INTERSECTION:
+                    break;
+                case X_INTERSECTION:
+                    subjInt = new Node(intPoint);
+                    a.next = subjInt;
+                    subjInt.prev = a;
+                    b.prev = subjInt;
+                    subjInt.next = b;
+
+                    objInt = new Node(intPoint);
+                    c.next = objInt;
+                    objInt.prev = c;
+                    d.prev = objInt;
+                    objInt.next = d;
+
+                    subjInt.cross = objInt;
+                    objInt.cross = subjInt;
+
+                    // test new subject segments with remaining object segments
+                    checkIntersections(a, subjInt, objStart, d);
+                    checkIntersections(subjInt, b, objStart, d);
+                    return;
+                case T1_INTERSECTION:
+                    objInt = new Node(a.pos);
+                    c.next = objInt;
+                    objInt.prev = c;
+                    d.prev = objInt;
+                    objInt.next = d;
+
+                    objInt.cross = a;
+                    a.cross = objInt;
+
+                    break;
+                case T2_INTERSECTION:
+                    subjInt = new Node(c.pos);
+                    a.next = subjInt;
+                    subjInt.prev = a;
+                    b.prev = subjInt;
+                    subjInt.next = b;
+
+                    subjInt.cross = c;
+                    c.cross = subjInt;
+
+                    // test new subject segments with remaining object segments
+                    checkIntersections(a, subjInt, objStart, d);
+                    checkIntersections(subjInt, b, objStart, d);
+                    return;
+                case V_INTERSECTION:
+                    a.cross = c;
+                    c.cross = a;
+
+                    break;
+                case X_OVERLAP:
+                    subjInt = new Node(c.pos);
+                    objInt = new Node(a.pos);
+
+                    a.next = subjInt;
+                    subjInt.prev = a;
+                    b.prev = subjInt;
+                    subjInt.next = b;
+
+                    c.next = objInt;
+                    objInt.prev = c;
+                    d.prev = objInt;
+                    objInt.next = d;
+
+                    subjInt.cross = c;
+                    c.cross = subjInt;
+
+                    objInt.cross = a;
+                    a.cross = objInt;
+
+                    // test new subject segments with remaining object segments
+                    checkIntersections(a, subjInt, objStart, d);
+                    checkIntersections(subjInt, b, objStart, d);
+                    return;
+                case T1_OVERLAP:
+                    objInt = new Node(a.pos);
+
+                    c.next = objInt;
+                    objInt.prev = c;
+                    d.prev = objInt;
+                    objInt.next = d;
+
+                    objInt.cross = a;
+                    a.cross = objInt;
+
+                    break;
+                case T2_OVERLAP:
+                    subjInt = new Node(c.pos);
+
+                    a.next = subjInt;
+                    subjInt.prev = a;
+                    b.prev = subjInt;
+                    subjInt.next = b;
+
+                    subjInt.cross = c;
+                    c.cross = subjInt;
+
+                    // test new subject segments with remaining object segments
+                    checkIntersections(a, subjInt, objStart, d);
+                    checkIntersections(subjInt, b, objStart, d);
+                    return;
+                case V_OVERLAP:
+                    a.cross = c;
+                    c.cross = a;
+
+                    break;
+            }
+            c = d;
+            d = d.next;
+        } while( c != objStart );
+    }
+
+    //NOTE: does not cover all possible intersection cases, just the ones relevant to the boolean op algorithm
+    private static int intersectionTest(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
+        PVector ab = new PVector(b.x - a.x, b.y - a.y);
+        PVector cd = new PVector(d.x - c.x, d.y - c.y);
+        
+        //based on equation:
+        //ab * t + a = cd * u + c , which leads to:
+        //(cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y)) = t * ((ab.y * cd.x) - (ab.x * cd.y))
+        //(ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y)) = u * ((ab.y * cd.x) - (ab.x * cd.y)) 
+
+        // 2nd half of above calculation
+        // tests slopes: parallel if this equals 0
+        float t = (ab.y * cd.x) - (ab.x * cd.y);
+        float u = (ab.y * cd.x) - (ab.x * cd.y);
+
+        // non-parallel cases:
+        if( PApplet.abs(t) > 0 ) {
+            t = ((cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y))) / t;  //complete t calculation
+            u = ((ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y))) / u;  //complete u calculation
+
+            if(t > 0 && t < 1 && u > 0 && u < 1) {
+                intPoint.set((ab.x * t) + a.x, (ab.y * t) + a.y);
+                return X_INTERSECTION;
+            }
+            else if(t == 0 && u > 0 && u < 1){
+                return T1_INTERSECTION;
+            }
+            else if(t > 0 && t < 1 && u == 0){
+                return T2_INTERSECTION;
+            }
+            else if(t == 0 && u == 0){
+                return V_INTERSECTION;
+            }
+        }
+        else {
+            //test for colinearity, using triangle area calculation
+            if(colinearTest(a, b, c) == 0 && (colinearTest(a, b, d) == 0)){
+                // parallel cases:
+                // t and u now reflect the position of a and c relative to each other
+                if(ab.x != 0){
+                    t = (c.x - a.x)/ab.x;
+                } else {
+                    t = (c.y - a.y)/ab.y;
+                }
+                if(cd.x != 0){
+                    u = (a.x - c.x)/cd.x;
+                } else {
+                    u = (a.y - c.y)/cd.y;
+                }
+
+                if(t > 0 && t < 1 && u > 0 && u < 1){
+                    return X_OVERLAP;
+                }
+                else if((t < 0 || t >= 1) && u > 0 && u < 1){
+                    return T1_OVERLAP;
+                }
+                else if((u < 0 || u >= 1) && t > 0 && t < 1){
+                    return T2_OVERLAP;
+                }
+                else if(u == 0 && t == 0){
+                    return V_OVERLAP;
+                }
+            }
+        }
+    //no intersection
+    intPoint = null;
+    return NO_INTERSECTION;
+    }
+
+    private static void labelNodes_crossings(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
+        // 1 - label sidedness, only needed for subject polygon
         for(Node subjStart : subjNodes){
             Node currentNode = subjStart;
+            Node subjPrev, subjNext, objPrev, objNext;
             do{
-                // do something..
+                if(currentNode.isIntersection()){
+                    subjPrev = currentNode.prev;
+                    subjNext = currentNode.next;
+                    objPrev = currentNode.cross.prev;
+                    objNext = currentNode.cross.next;
+
+                    int prevSide = getSide(subjPrev, currentNode, objPrev, objNext);
+                    int nextSide = getSide(subjNext, currentNode, objPrev, objNext);
+
+                    switch(prevSide){
+                        case ON:
+                            switch(nextSide){
+                                case ON:
+                                    currentNode.sidedness = Node.ON_ON;
+                                    break;
+                                case RIGHT:
+                                    currentNode.sidedness = Node.ON_RIGHT;
+                                    break;
+                                case LEFT:
+                                    currentNode.sidedness = Node.ON_LEFT;
+                                    break;
+                            }
+                            break;
+                        case RIGHT:
+                            switch(nextSide){
+                                case ON:
+                                    currentNode.sidedness = Node.RIGHT_ON;
+                                    break;
+                                case RIGHT:
+                                    currentNode.sidedness = Node.RIGHT_RIGHT;
+                                    break;
+                                case LEFT:
+                                    currentNode.sidedness = Node.RIGHT_LEFT;
+                                    break;
+                            }
+                            break;
+                        case LEFT:
+                            switch(nextSide){
+                                case ON:
+                                    currentNode.sidedness = Node.LEFT_ON;
+                                    break;
+                                case RIGHT:
+                                    currentNode.sidedness = Node.LEFT_RIGHT;
+                                    break;
+                                case LEFT:
+                                    currentNode.sidedness = Node.LEFT_LEFT;
+                                    break;
+                            }
+                            break;
+                    }
+                }
+                currentNode = currentNode.next;
+            } while(currentNode != subjStart);
+        }
+
+        // 2 - find crossings on subject polygon, copy to object polygon
+        for(Node subjStart : subjNodes){
+            Node currentNode = subjStart;
+            // loop #1 - label simple cases, and determine currentSide for next loop
+            int currentSide = -1;
+            do{
+                if(currentNode.isIntersection()){
+                    switch(currentNode.sidedness){
+                        case Node.ON_LEFT:
+                            //skip for first loop
+                            break;
+                        case Node.ON_RIGHT:
+                            //skip for first loop
+                            break;
+                        case Node.RIGHT_LEFT:
+                            currentNode.isCrossing = true;
+                            currentNode.cross.isCrossing = true;
+                            break;
+                        case Node.LEFT_RIGHT:
+                            currentNode.isCrossing = true;
+                            currentNode.cross.isCrossing = true;
+                            break;
+                        case Node.RIGHT_ON:
+                            currentSide = RIGHT;
+                            break;
+                        case Node.LEFT_ON:
+                            currentSide = LEFT;
+                            break;
+                        default:
+                            // the rest of cases: ON/ON, RIGHT/RIGHT, LEFT/LEFT are just bounces
+                            break;
+                    }
+                }
+                currentNode = currentNode.next;
+            } while(currentNode != subjStart);
+
+            currentNode = subjStart;
+            // loop #2 - use currentSide to finish labels for delayed cases
+            do{
+                if(currentNode.isIntersection()){
+                    switch(currentNode.sidedness){
+                        case Node.ON_LEFT:
+                            if(currentSide == -1){
+                                System.out.println("ERROR: Unable to determine crossing label.");
+                            } else if (currentSide == RIGHT){
+                                currentNode.isCrossing = true;
+                                currentNode.cross.isCrossing = true;
+                            }
+                            break;
+                        case Node.ON_RIGHT:
+                            if(currentSide == -1){
+                                System.out.println("ERROR: Unable to determine crossing label.");
+                            } else if (currentSide == LEFT){
+                                currentNode.isCrossing = true;
+                                currentNode.cross.isCrossing = true;
+                            }
+                            break;
+                        case Node.RIGHT_ON:
+                            currentSide = RIGHT;
+                            break;
+                        case Node.LEFT_ON:
+                            currentSide = LEFT;
+                            break;
+                        default:
+                            // all other cases should already be handled in previous loop
+                            break;
+                    }
+                }
+                currentNode = currentNode.next;
             } while(currentNode != subjStart);
         }
     }
 
-    private static void drawNodes(ArrayList<Node> nodes, PApplet app){
-        app.pushStyle();
-        app.noStroke();
-        for(Node n : nodes){
-            app.fill(0xff314a8b);
-            app.ellipse(n.pos.x, n.pos.y, 12, 12);
-            Node temp = n.next;
-            while(temp != n){
-                if(temp.isIntersection){
-                    app.fill(0xffD10E3C);
-                } else {
-                    app.fill(0xff58aed1);
-                }
-                app.ellipse(temp.pos.x, temp.pos.y, 12, 12);
-                temp = temp.next;
+    private static int getSide(Node subj, Node intersection, Node objPrev, Node objNext){
+        if(subj.cross == objPrev){ return ON; }
+        if(subj.cross == objNext){ return ON; }
+        if(colinearTest(objPrev.pos, intersection.pos, objNext.pos) >= 0){
+            //straight, or skews left
+            if( (colinearTest(subj.pos, objPrev.pos, intersection.pos) > 0) && (colinearTest(subj.pos, intersection.pos, objNext.pos) > 0) ){
+                return LEFT;
             }
+            else{ return RIGHT; }
         }
-        app.popStyle();
+        else {
+            //skews right
+            if( (colinearTest(subj.pos, objPrev.pos, intersection.pos) < 0) && (colinearTest(subj.pos, intersection.pos, objNext.pos) < 0) ){
+                return RIGHT;
+            }
+            else{ return LEFT; }
+        }
     }
 
-    //Should this be FShape/FShape intersection?
-    public static FPolygon booleanOp(FPolygon subj, FPolygon obj, PApplet app){
+    private static void labelNodes_entries(ArrayList<Node> nodes, FPolygon poly){
+        // label entry/exit
+        for(Node start : nodes){
+            Node currentNode = start;
+            do{
+                if(currentNode.isIntersection() && currentNode.isCrossing){
+                    //test for entry case with midpoint of 'next' segment
+                    PVector testPoint = PVector.lerp(currentNode.pos, currentNode.next.pos, 0.5f);
+                    if(isPointInPoly(testPoint, poly)){
+                        currentNode.isEntry = true;
+                    }
+                    // do nothing for exit cases, defaults to false
+                }
+                currentNode = currentNode.next;
+            } while(currentNode != start);
+        }
+    }
+
+    private static float colinearTest(PVector a, PVector b, PVector c){
+        return (a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y));
+    }
+
+    private static FPolygon trace_and(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
         FPolygon result = new FPolygon();
 
-        ArrayList<Node> subjNodes = initNodes(subj);
-        ArrayList<Node> objNodes = initNodes(obj);
+        for(Node subjStart : subjNodes){
+            Node currentNode = subjStart;
+            do{
+                if(currentNode.isCrossing && !currentNode.traced){
+                    FPath path = new FPath();
 
-        labelNodes(subjNodes, objNodes);
+                    Node tracingNode = currentNode;
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
 
-        initIntersections(subjNodes, objNodes);
+                    boolean moveToNext;
+                    if(tracingNode.isEntry){
+                        moveToNext = true;
+                    } else {
+                        moveToNext = false;
+                    }
 
-        drawNodes(subjNodes, app);
-        drawNodes(objNodes, app);
+                    if(moveToNext){
+                        tracingNode = tracingNode.next;
+                    } else {
+                        tracingNode = tracingNode.prev;
+                    }
 
-        result = or(subjNodes, objNodes);
+                    do{
+                        path.appendVertex(tracingNode.pos);
+                        tracingNode.traced = true;
 
+                        if(tracingNode.isCrossing){
+                            tracingNode = tracingNode.cross;
+                            if(tracingNode.isEntry){
+                                moveToNext = true;
+                            } else {
+                                moveToNext = false;
+                            }
+                        }
+
+                        if(moveToNext){
+                            tracingNode = tracingNode.next;
+                        } else {
+                            tracingNode = tracingNode.prev;
+                        }
+
+                    }while(!tracingNode.traced);
+
+                    result.addContour(path);
+                }
+                currentNode = currentNode.next;
+            } while(currentNode != subjStart);
+        }
+
+        return result;
+    }
+
+    private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
         app.pushStyle();
-        app.stroke(0xff49FF33);
-        app.strokeWeight(6);
         app.noFill();
-        result.draw(app);
-        app.pushStyle();
-
-        return result;
-    }
-
-    private static FPolygon or(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
-        FPolygon result = null;
-
-        Node boundStart = subjNodes.get(0);
-        subjNodes.remove(0);
-        Node current = boundStart;
-        do{
-            FPath path = null;
-            path = processNode_or(current, path);
-            if(path != null){
-                if(result == null){
-                    result = new FPolygon(path);
+        app.strokeWeight(2);
+        for(Node n : nodes){
+            Node temp = n;
+            do{
+                if(temp.isIntersection() && temp.isCrossing){
+                    if(temp.isEntry){
+                        app.stroke(0xffD10E3C); //red
+                    } else {
+                        app.stroke(0xff58aed1); //blue
+                    }
                 } else {
-                    result.addContour(path);
+                    app.stroke(0xff3CD10E); //green
                 }
-            }
-
-            // move on to next vertex
-            current = current.next;
-        } while (current != boundStart);
-
-        for(Node contourStart : subjNodes){
-            current = contourStart;
-            do{
-                FPath path = null;
-                path = processNode_or(current, path);
-                if(path != null){
-                    result.addContour(path);
-                }
-
-                // move on to next vertex
-                current = current.next;
-            } while (current != contourStart);
+                app.ellipse(temp.pos.x, temp.pos.y, 12.0f*multiplier, 12.0f*multiplier);
+                temp = temp.next;
+            } while(temp != n);
         }
-
-        for(Node contourStart : objNodes){
-            current = contourStart;
-            do{
-                FPath path = null;
-                path = processNode_or(current, path);
-                if(path != null){
-                    result.addContour(path);
-                }
-
-                // move on to next vertex
-                current = current.next;
-            } while (current != contourStart);
-        }
-
-        return result;
-    }
-
-    private static FPath processNode_or(Node v, FPath path){
-        // process current vertex
-
-        // move on to next vertex
-        if(v.isIntersection){
-            v = v.cross;
-            v.processed = true;
-        }
-        v = v.next;
-
-        if(!v.processed){
-            path = processNode_or(v, path);
-        }
-
-        return path;
+        app.popStyle();
     }
 
 }

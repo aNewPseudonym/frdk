@@ -2,13 +2,13 @@ package frdk;
 
 import frdk.geom.*;
 import processing.core.*;
-import java.util.ArrayList;
+//import java.util.ArrayList;
 
 public class geomTestApp extends PApplet{
     
-    FShape shape;
-    FGroup group;
     FPolygon cursor;
+    FPolygon boxA, boxB, boxC, boxD, boxE, boxF, boxG, boxH, boxI, boxJ, boxK, boxL;
+    FPolygon hollow, twisted;
 
     PVector[] circVerts = {
         new PVector(100,0),
@@ -23,20 +23,39 @@ public class geomTestApp extends PApplet{
     PVector[] boxVerts = {
         new PVector(100,100),
         new PVector(200,100),
-        new PVector(225,225),
+        new PVector(200,200),
         new PVector(100,200),
     };
-    PVector[] contourVerts = {
-        new PVector(125,125),
-        new PVector(175,125),
-        new PVector(175,175),
-        new PVector(125,175),
+    PVector[] diamondVerts = {
+        new PVector(0,100),
+        new PVector(100,0),
+        new PVector(200,100),
+        new PVector(100,200),
     };
-    PVector[] secondContourVerts = {
-        new PVector(140,140),
-        new PVector(160,140),
-        new PVector(160,160),
-        new PVector(140,160),
+    PVector[] cutBoxVerts = {
+        new PVector(100,100),
+        new PVector(200,100),
+        new PVector(200,200),
+        new PVector(100,200),
+        new PVector(150,150),
+    };
+    PVector[] twistedVerts = {
+        new PVector(0,0),
+        new PVector(200,0),
+        new PVector(0,200),
+        new PVector(200,200),
+    };
+    PVector[] longBoxVerts = {
+        new PVector(0,0),
+        new PVector(400,0),
+        new PVector(400,100),
+        new PVector(0,100),
+    };
+    PVector[] longHoleVerts = {
+        new PVector(100,25),
+        new PVector(300,25),
+        new PVector(300,75),
+        new PVector(100,75),
     };
 
     public static void main(String[] args) {
@@ -45,74 +64,93 @@ public class geomTestApp extends PApplet{
     }
 
     public void settings() {
-        size(800, 600);
+        size(800, 1200);
     }
 
     public void setup() {
-        group = new FGroup();
+        boxA = new FPolygon(boxVerts);
+        boxA.centerAt(200, 200);
+        boxB = new FPolygon(boxVerts);
+        boxB.centerAt(250, 250);
 
-        shape = new FPolygon(boxVerts);
-        shape.centerAt(width/2, height/2);
-        group.appendChild(shape);
+        boxC = new FPolygon(boxVerts);
+        boxC.centerAt(500, 200);
+        boxD = new FPolygon(boxVerts);
+        boxD.centerAt(550, 200);
 
-        boxVerts[2].sub(25, 25);
-        FPolygon hasHole = new FPolygon(boxVerts);
-        hasHole.addContour(contourVerts);
-        hasHole.addContour(secondContourVerts);
-        group.appendChild(hasHole);
-        group.centerAt(width/2, height/2);
+        boxE = new FPolygon(boxVerts);
+        boxE.centerAt(200, 450);
+        boxF = new FPolygon(diamondVerts);
+        boxF.centerAt(200, 450);
+
+        boxG = new FPolygon(boxVerts);
+        boxG.centerAt(500, 450);
+        boxH = new FPolygon(boxVerts);
+        boxH.centerAt(600, 500);
+
+        boxI = new FPolygon(boxVerts);
+        boxI.centerAt(200, 700);
+        boxJ = new FPolygon(boxVerts);
+        boxJ.centerAt(200, 700);
+        
+        boxK = new FPolygon(cutBoxVerts);
+        boxK.centerAt(500, 700);
+        boxK.rotateAbout(boxK.getCentroid().x, boxK.getCentroid().y, PI);
+        boxL = new FPolygon(cutBoxVerts);
+        boxL.centerAt(500, 700);
+
+        twisted = new FPolygon(twistedVerts);
+        twisted.centerAt(width/2, 1000);
+        hollow = new FPolygon(longBoxVerts);
+        hollow.addContour(longHoleVerts);
+        hollow.centerAt(width/2, 1000);
 
         cursor = new FPolygon(circVerts);
         cursor.centerAt(width/2, height/2);
     }
 
     public void draw() {
-        background(200);
-
-        // rotate group and draw
-        //group.rotateAbout(width/2, height/2, 0.01f);
-        fill(255);
-        stroke(0);
-        strokeWeight(2);
-        group.draw(this);
-
-        // draw center of app
-        fill(0xff5e73d1);
-        noStroke();
-        ellipse(width/2, height/2, 9, 9);
-
-        fill(0xffe50239);
-        stroke(0xffe50239);
-        strokeWeight(1);
-
-        // draw centroid
-        PVector center = group.getCentroid();
-        PVector mid = group.getMidpoint();
-        ellipse(center.x, center.y, 3,3);
-
-        // draw bounding box
-        float w = group.getWidth();
-        float h = group.getHeight();
-        line(mid.x-w/2, center.y, mid.x+w/2, center.y);
-        line(center.x, mid.y-h/2, center.x, mid.y+h/2);
-        rectMode(CENTER);
-        noFill();
-        rect(mid.x, mid.y, w+5, h+5);
+        background(128);
         
         // draw cursor
         cursor.centerAt(mouseX, mouseY);
-        if(FG.isPointInPoly(cursor.getMidpoint(), (FPolygon)group.getChild(0)) || 
-            FG.isPointInPoly(cursor.getMidpoint(), (FPolygon)group.getChild(1)) ){
-            stroke(0xff5e73d1);
-        } else {
-            stroke(0);
-        }
         noFill();
         strokeWeight(4);
         cursor.draw(this);
 
         // test boolean operations
-        //FG.booleanOp(cursor, (FPolygon)group.getChild(1), this);
+        noStroke();
+        fill(0xff0ed1a3);
+        FG.booleanOp(boxA, boxB, this).draw(this);
+        FG.booleanOp(boxC, boxD, this).draw(this);
+        FG.booleanOp(boxE, boxF, this).draw(this);
+        FG.booleanOp(boxG, boxH, this).draw(this);
+        FG.booleanOp(boxI, boxJ, this).draw(this);
+        FG.booleanOp(boxK, boxL, this).draw(this);
+
+        FG.booleanOp(twisted, hollow, this).draw(this);
+
+        noFill();
+        stroke(255);
+        strokeWeight(4);
+        boxA.draw(this);
+        boxC.draw(this);
+        boxE.draw(this);
+        boxG.draw(this);
+        boxI.draw(this);
+        boxK.draw(this);
+        twisted.draw(this);
+        stroke(0);
+        strokeWeight(2);
+        boxB.draw(this);
+        boxD.draw(this);
+        boxF.draw(this);
+        boxH.draw(this);
+        boxJ.draw(this);
+        boxL.draw(this);
+        hollow.draw(this);
+
+        //FG.booleanOp(cursor, boxE, this);
 
     }
 

@@ -4,30 +4,43 @@ import processing.core.*;
 
 class Node{
 
-    final static int OUTSIDE = 0;
-    final static int INSIDE = 1;
-    final static int ENTRY = 2;
-    final static int EXIT = 3;
-    final static int BOUNCE = 4;
+    final static int ON_ON = 0;
+    final static int ON_RIGHT = 1;
+    final static int ON_LEFT = 2;
+    final static int RIGHT_ON = 3;
+    final static int RIGHT_RIGHT = 4;
+    final static int RIGHT_LEFT = 5;
+    final static int LEFT_ON = 6;
+    final static int LEFT_RIGHT = 7;
+    final static int LEFT_LEFT = 8;
 
     PVector pos;
-    boolean isIntersection;
-    boolean processed;
-    int label;
     Node next, prev, cross;
+    int sidedness;
+    boolean isCrossing;
+    boolean isEntry;
+
+    boolean traced;
 
     Node(PVector p){
         pos = new PVector(p.x, p.y);
-        isIntersection = false;
-        processed = false;
-        label = -1;
         next = null;
         prev = null;
         cross = null;
+
+        // labels
+        sidedness = -1;
+        isCrossing = false;
+        isEntry = false;
+
+        traced = false;
     }
 
     void intersect(Node x){
-        isIntersection = true;
         cross = x;
+    }
+
+    boolean isIntersection(){
+        return (cross != null);
     }
 }
