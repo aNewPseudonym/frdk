@@ -286,7 +286,7 @@ public class FG{
         labelNodes_entries(objNodes, subj);
 
         //3 - Tracing Phase
-        result = trace_and(subjNodes, objNodes);
+        result = trace_and(subjNodes, objNodes, obj, subj);
 
         drawNodes(subjNodes, app, 2.0f);
         drawNodes(objNodes, app, 1.0f);
@@ -334,7 +334,7 @@ public class FG{
             do{
                 for(Node objStart : objNodes){
                     b = a.next;
-                    //test this segment against all object Node chains
+                    //test this segment against this object Node chain
                     checkIntersections(a, b, objStart, objStart);
                 }
                 // increment segment
@@ -711,20 +711,25 @@ public class FG{
         return (a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y));
     }
 
-    private static FPolygon trace_and(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
+    private static FPolygon trace_and(ArrayList<Node> subjNodes, ArrayList<Node> objNodes, FPolygon obj, FPolygon subj){
         FPolygon result = new FPolygon();
 
         for(Node subjStart : subjNodes){
             Node currentNode = subjStart;
+
+            int crossings = 0;      //track crossing intersections
+
             do{
                 if(currentNode.isCrossing && !currentNode.traced){
+                    crossings += 1;
+
                     FPath path = new FPath();
 
                     Node tracingNode = currentNode;
                     path.appendVertex(tracingNode.pos);
                     tracingNode.traced = true;
 
-                    boolean moveToNext;
+                    boolean moveToNext;         //True for traverse forward, False for traverse backwards
                     if(tracingNode.isEntry){
                         moveToNext = true;
                     } else {
@@ -762,6 +767,39 @@ public class FG{
                 }
                 currentNode = currentNode.next;
             } while(currentNode != subjStart);
+
+            //if no crossing intersections, find a midpoint to determine if it is inside or outside
+            if(crossings == 0){
+                currentNode = subjStart;
+                boolean confirmedInteriority = false;
+                boolean isInside = false;
+                do{
+                    if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
+                        PVector a = currentNode.pos;
+                        PVector b = currentNode.next.pos;
+                        //get midpoint
+                        PVector mid = PVector.lerp(a,b,0.5f);
+                        isInside = isPointInPoly(mid, obj);
+                        confirmedInteriority = true;
+                        break;
+                    }
+                    currentNode = currentNode.next;
+                } while (currentNode != subjStart);
+
+                if(confirmedInteriority){
+                    if(isInside){
+                        // subj path is inside obj
+                        // traverse nodes and add to result
+                    } else {
+                        // subj path is outside obj
+                        // do nothing
+                    }
+                } else {
+                    // interiority unconfirmed
+                    // should be identical polygons? i think...
+                }
+            }
+
         }
 
         return result;
