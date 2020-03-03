@@ -51,6 +51,7 @@ public class FPolygon extends FShape{
         }
         if(bound.vertCount() < 3){
             bound = contour;
+            bound.confirmCW();
             return;
         }
         FPath[] newContours = new FPath[contours.length + 1];

@@ -9,6 +9,7 @@ public class geomTestApp extends PApplet{
     FPolygon cursor;
     FPolygon boxA, boxB, boxC, boxD, boxE, boxF, boxG, boxH, boxI, boxJ, boxK, boxL;
     FPolygon hollow, twisted;
+    FPolygon hollow2, smallBox;
 
     PVector[] circVerts = {
         new PVector(100,0),
@@ -64,7 +65,7 @@ public class geomTestApp extends PApplet{
     }
 
     public void settings() {
-        size(800, 1200);
+        size(800, 1600);
     }
 
     public void setup() {
@@ -105,6 +106,12 @@ public class geomTestApp extends PApplet{
         hollow.addContour(longHoleVerts);
         hollow.centerAt(width/2, 1000);
 
+        hollow2 = new FPolygon(longBoxVerts);
+        hollow2.addContour(longHoleVerts);
+        hollow2.centerAt(width/2, 1300);
+        smallBox = new FPolygon(boxVerts);
+        smallBox.centerAt(450, 1350);
+
         cursor = new FPolygon(circVerts);
         cursor.centerAt(width/2, height/2);
     }
@@ -115,11 +122,11 @@ public class geomTestApp extends PApplet{
         // draw cursor
         cursor.centerAt(mouseX, mouseY);
         noFill();
-        strokeWeight(4);
+        strokeWeight(2);
         cursor.draw(this);
 
         // test boolean operations
-        noStroke();
+        //noStroke();
         fill(0xff0ed1a3);
         FG.booleanOp(boxA, boxB, this).draw(this);
         FG.booleanOp(boxC, boxD, this).draw(this);
@@ -129,6 +136,10 @@ public class geomTestApp extends PApplet{
         FG.booleanOp(boxK, boxL, this).draw(this);
 
         FG.booleanOp(twisted, hollow, this).draw(this);
+
+        FG.booleanOp(smallBox, hollow2, this).draw(this);
+        
+        //FG.booleanOp(cursor, hollow2, this).draw(this);
 
         noFill();
         stroke(255);
@@ -140,6 +151,7 @@ public class geomTestApp extends PApplet{
         boxI.draw(this);
         boxK.draw(this);
         twisted.draw(this);
+        hollow2.draw(this);
         stroke(0);
         strokeWeight(2);
         boxB.draw(this);
@@ -149,8 +161,7 @@ public class geomTestApp extends PApplet{
         boxJ.draw(this);
         boxL.draw(this);
         hollow.draw(this);
-
-        //FG.booleanOp(cursor, boxE, this);
+        smallBox.draw(this);
 
     }
 

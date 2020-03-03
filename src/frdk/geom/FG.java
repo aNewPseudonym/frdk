@@ -286,7 +286,7 @@ public class FG{
         labelNodes_entries(objNodes, subj);
 
         //3 - Tracing Phase
-        result = trace_and(subjNodes, objNodes, obj, subj);
+        result = trace_or(subjNodes, objNodes, obj, subj);
 
         drawNodes(subjNodes, app, 2.0f);
         drawNodes(objNodes, app, 1.0f);
@@ -715,25 +715,60 @@ public class FG{
         FPolygon result = new FPolygon();
 
         for(Node subjStart : subjNodes){
-            Node currentNode = subjStart;
+            tracePath_and(subjStart, obj, result);
+        }
+        // only need to trace subject for AND operation
 
-            int crossings = 0;      //track crossing intersections
+        // for(Node objStart : objNodes){
+        //     tracePath_and(objStart, subj, result);
+        // }
 
-            do{
-                if(currentNode.isCrossing && !currentNode.traced){
-                    crossings += 1;
+        return result;
+    }
 
-                    FPath path = new FPath();
+    private static void tracePath_and(Node start, FPolygon otherPoly, FPolygon result){
+        Node currentNode = start;
 
-                    Node tracingNode = currentNode;
+        int crossings = 0;      //track crossing intersections
+
+        do{
+            // if Node is an untraced crossing, begin a new path
+            if(currentNode.isCrossing && !currentNode.traced){
+                crossings += 1;
+
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.traced = true;
+
+                boolean moveToNext;         //True for traverse forward, False for traverse backwards
+
+                // for AND, follow entry points
+                // if a Node is an entry point -> traverse forward, else backwards
+                if(tracingNode.isEntry){
+                    moveToNext = true;
+                } else {
+                    moveToNext = false;
+                }
+
+                if(moveToNext){
+                    tracingNode = tracingNode.next;
+                } else {
+                    tracingNode = tracingNode.prev;
+                }
+
+                do{
                     path.appendVertex(tracingNode.pos);
                     tracingNode.traced = true;
 
-                    boolean moveToNext;         //True for traverse forward, False for traverse backwards
-                    if(tracingNode.isEntry){
-                        moveToNext = true;
-                    } else {
-                        moveToNext = false;
+                    if(tracingNode.isCrossing){
+                        tracingNode = tracingNode.cross;
+                        if(tracingNode.isEntry){
+                            moveToNext = true;
+                        } else {
+                            moveToNext = false;
+                        }
                     }
 
                     if(moveToNext){
@@ -742,67 +777,202 @@ public class FG{
                         tracingNode = tracingNode.prev;
                     }
 
+                }while(!tracingNode.traced);
+
+                result.addContour(path);
+            }
+            currentNode = currentNode.next;
+        } while(currentNode != start);
+
+        //if no crossing intersections, find a midpoint to determine if it is inside or outside
+        if(crossings == 0){
+            currentNode = start;
+            boolean confirmedInteriority = false;
+            boolean isInside = false;
+            do{
+                if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
+                    PVector a = currentNode.pos;
+                    PVector b = currentNode.next.pos;
+                    //get midpoint
+                    PVector mid = PVector.lerp(a,b,0.5f);
+                    isInside = isPointInPoly(mid, otherPoly);
+                    confirmedInteriority = true;
+                    break;
+                }
+                currentNode = currentNode.next;
+            } while (currentNode != start);
+
+            if(confirmedInteriority){
+                if(isInside){
+                    // subj path is inside obj
+                    // traverse nodes and add to result
+                    FPath path = new FPath();
+
+                    Node tracingNode = currentNode;
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
+                    tracingNode = tracingNode.next;
                     do{
                         path.appendVertex(tracingNode.pos);
                         tracingNode.traced = true;
+                        tracingNode = tracingNode.next;
+                    }while(!tracingNode.traced);
 
-                        if(tracingNode.isCrossing){
-                            tracingNode = tracingNode.cross;
-                            if(tracingNode.isEntry){
-                                moveToNext = true;
-                            } else {
-                                moveToNext = false;
-                            }
-                        }
+                    result.addContour(path);
 
-                        if(moveToNext){
-                            tracingNode = tracingNode.next;
+                } else {
+                    // subj path is outside obj
+                    // do nothing
+                }
+            } else {
+                // interiority unconfirmed
+                // should be identical polygons? add to result
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.traced = true;
+                tracingNode = tracingNode.next;
+                do{
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
+                    tracingNode = tracingNode.next;
+                }while(!tracingNode.traced);
+
+                result.addContour(path);
+            }
+        }
+    }
+
+    private static FPolygon trace_or(ArrayList<Node> subjNodes, ArrayList<Node> objNodes, FPolygon obj, FPolygon subj){
+        FPolygon result = new FPolygon();
+
+        for(Node subjStart : subjNodes){
+            tracePath_or(subjStart, obj, result);
+        }
+        for(Node objStart : objNodes){
+            tracePath_or(objStart, subj, result);
+        }
+
+        return result;
+    }
+
+    private static void tracePath_or(Node start, FPolygon otherPoly, FPolygon result){
+        Node currentNode = start;
+
+        int crossings = 0;      //track crossing intersections
+
+        do{
+            // if Node is an untraced crossing, begin a new path
+            if(currentNode.isCrossing && !currentNode.traced){
+                crossings += 1;
+
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.traced = true;
+
+                boolean moveToNext;         //True for traverse forward, False for traverse backwards
+
+                // for OR, avoid entry points
+                // if a Node is an entry point -> traverse backwards, else forwards
+                if(tracingNode.isEntry){
+                    moveToNext = false;
+                } else {
+                    moveToNext = true;
+                }
+
+                if(moveToNext){
+                    tracingNode = tracingNode.next;
+                } else {
+                    tracingNode = tracingNode.prev;
+                }
+
+                do{
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
+
+                    if(tracingNode.isCrossing){
+                        tracingNode = tracingNode.cross;
+                        if(tracingNode.isEntry){
+                            moveToNext = false;
                         } else {
-                            tracingNode = tracingNode.prev;
+                            moveToNext = true;
                         }
+                    }
 
+                    if(moveToNext){
+                        tracingNode = tracingNode.next;
+                    } else {
+                        tracingNode = tracingNode.prev;
+                    }
+
+                }while(!tracingNode.traced);
+
+                result.addContour(path);
+            }
+            currentNode = currentNode.next;
+        } while(currentNode != start);
+
+        //if no crossing intersections, find a midpoint to determine if it is inside or outside
+        if(crossings == 0){
+            currentNode = start;
+            boolean confirmedInteriority = false;
+            boolean isInside = false;
+            do{
+                if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
+                    PVector a = currentNode.pos;
+                    PVector b = currentNode.next.pos;
+                    //get midpoint
+                    PVector mid = PVector.lerp(a,b,0.5f);
+                    isInside = isPointInPoly(mid, otherPoly);
+                    confirmedInteriority = true;
+                    break;
+                }
+                currentNode = currentNode.next;
+            } while (currentNode != start);
+
+            if(confirmedInteriority){
+                if(isInside){
+                    // subj path is inside obj
+                    // do nothing
+
+                } else {
+                    // subj path is outside obj
+                    // traverse nodes and add to result
+                    FPath path = new FPath();
+
+                    Node tracingNode = currentNode;
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
+                    tracingNode = tracingNode.next;
+                    do{
+                        path.appendVertex(tracingNode.pos);
+                        tracingNode.traced = true;
+                        tracingNode = tracingNode.next;
                     }while(!tracingNode.traced);
 
                     result.addContour(path);
                 }
-                currentNode = currentNode.next;
-            } while(currentNode != subjStart);
+            } else {
+                // interiority unconfirmed
+                // should be identical polygons? add result
+                FPath path = new FPath();
 
-            //if no crossing intersections, find a midpoint to determine if it is inside or outside
-            if(crossings == 0){
-                currentNode = subjStart;
-                boolean confirmedInteriority = false;
-                boolean isInside = false;
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.traced = true;
+                tracingNode = tracingNode.next;
                 do{
-                    if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
-                        PVector a = currentNode.pos;
-                        PVector b = currentNode.next.pos;
-                        //get midpoint
-                        PVector mid = PVector.lerp(a,b,0.5f);
-                        isInside = isPointInPoly(mid, obj);
-                        confirmedInteriority = true;
-                        break;
-                    }
-                    currentNode = currentNode.next;
-                } while (currentNode != subjStart);
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.traced = true;
+                    tracingNode = tracingNode.next;
+                }while(!tracingNode.traced);
 
-                if(confirmedInteriority){
-                    if(isInside){
-                        // subj path is inside obj
-                        // traverse nodes and add to result
-                    } else {
-                        // subj path is outside obj
-                        // do nothing
-                    }
-                } else {
-                    // interiority unconfirmed
-                    // should be identical polygons? i think...
-                }
+                result.addContour(path);
             }
-
         }
-
-        return result;
     }
 
     private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
