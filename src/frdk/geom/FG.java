@@ -281,6 +281,7 @@ public class FG{
 
         //2 - Labeling Phase
         labelNodes_crossings(subjNodes, objNodes);
+        labelNodes_crossings(objNodes, subjNodes);
 
         labelNodes_entries(subjNodes, obj);
         labelNodes_entries(objNodes, subj);
@@ -620,9 +621,11 @@ public class FG{
                             currentNode.cross.isCrossing = true;
                             break;
                         case Node.RIGHT_ON:
+                            //indicates side, but do not label
                             currentSide = RIGHT;
                             break;
                         case Node.LEFT_ON:
+                            //indicates side, but do not label
                             currentSide = LEFT;
                             break;
                         default:
@@ -689,6 +692,7 @@ public class FG{
         }
     }
 
+    //TO-DO: not finding entry cases for internal holes properly! FIX!!
     private static void labelNodes_entries(ArrayList<Node> nodes, FPolygon poly){
         // label entry/exit
         for(Node start : nodes){
@@ -696,7 +700,20 @@ public class FG{
             do{
                 if(currentNode.isIntersection() && currentNode.isCrossing){
                     //test for entry case with midpoint of 'next' segment
-                    PVector testPoint = PVector.lerp(currentNode.pos, currentNode.next.pos, 0.5f);
+                    //TO-DO: THIS TEST POINT CAN BE ON THE TEST POLY, IF CURRENTNODE HAS X-ON SIDEDNESS
+                    PVector testPoint;
+                    if((currentNode.sidedness != Node.RIGHT_ON) && (currentNode.sidedness != Node.LEFT_ON) && (currentNode.sidedness != Node.ON_ON) ){
+                        testPoint = PVector.lerp(currentNode.pos, currentNode.next.pos, 0.5f);
+                    } else {
+                        Node testNode = currentNode.next;
+                        while(testNode != currentNode){
+                            if((testNode.sidedness != Node.RIGHT_ON) && (testNode.sidedness != Node.LEFT_ON) && (testNode.sidedness != Node.ON_ON) ){
+                                break;
+                            }
+                            testNode = testNode.next;
+                        }
+                        testPoint = PVector.lerp(testNode.pos, testNode.next.pos, 0.5f);
+                    }
                     if(isPointInPoly(testPoint, poly)){
                         currentNode.isEntry = true;
                     }

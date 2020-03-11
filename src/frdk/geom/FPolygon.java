@@ -3,8 +3,8 @@ package frdk.geom;
 import processing.core.*;
 
 public class FPolygon extends FShape{
-    private FPath bound;
-    private FPath[] contours;
+    private FPath bound;            //always clockwise (CW)
+    private FPath[] contours;       //always counter-clockwise (CCW)
 
     //--- CONSTRUCTORS ---
     public FPolygon(){

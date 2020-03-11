@@ -72,7 +72,7 @@ public class FPath extends FShape{
         }
 
         for(int i = 1; i < verts.length; i++){
-            if(verts[i].y < verts[lowest].y){ lowest = i; }
+            if(verts[i].y < verts[lowest].y){ lowest = i; continue; }
             if(verts[i].y == verts[lowest].y){
                 if( verts[i].x < verts[lowest].x ){
                     lowest = i;
@@ -91,7 +91,7 @@ public class FPath extends FShape{
         }
 
         for(int i = 1; i < verts.length; i++){
-            if(verts[i].y > verts[highest].y){ highest = i; }
+            if(verts[i].y > verts[highest].y){ highest = i; continue; }
             if(verts[i].y == verts[highest].y){
                 if( verts[i].x > verts[highest].x ){
                     highest = i;
