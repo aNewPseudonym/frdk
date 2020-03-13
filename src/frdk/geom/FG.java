@@ -25,6 +25,12 @@ import java.util.ArrayList;
 
 public class FG{
 
+    //--- TRACE TYPES ---//
+    public static final int AND = 0;
+    public static final int OR = 1;
+    public static final int NOT = 2;
+    public static final int XOR = 3;
+
     //--- INTERSECTION FLAGS ---//
     static final int NO_INTERSECTION = 0;
     // non-parallel cases
@@ -269,7 +275,7 @@ public class FG{
     //--- FOR BOOLEAN OPERATIONS ---
 
     //Should this be FShape/FShape intersection? Eventually...
-    public static FPolygon booleanOp(FPolygon subj, FPolygon obj, PApplet app){
+    public static FPolygon booleanOp_debug(FPolygon subj, FPolygon obj, int traceType, PApplet app){
         FPolygon result = new FPolygon();
 
         //0 - Initialize Node Chain
@@ -287,7 +293,20 @@ public class FG{
         labelNodes_entries(objNodes, subj);
 
         //3 - Tracing Phase
-        result = trace_or(subjNodes, objNodes, obj, subj);
+        switch(traceType){
+            case AND:
+                result = trace_and(subjNodes, objNodes, obj, subj);
+                break;
+            case OR:
+                result = trace_or(subjNodes, objNodes, obj, subj);
+                break;
+            case NOT:
+                result = trace_not(subjNodes, objNodes, obj, subj);
+                break;
+            case XOR:
+                result = trace_or(subjNodes, objNodes, obj, subj);
+                break;
+        }
 
         drawNodes(subjNodes, app, 2.0f);
         drawNodes(objNodes, app, 1.0f);
@@ -734,11 +753,7 @@ public class FG{
         for(Node subjStart : subjNodes){
             tracePath_and(subjStart, obj, result);
         }
-        // only need to trace subject for AND operation
-
-        // for(Node objStart : objNodes){
-        //     tracePath_and(objStart, subj, result);
-        // }
+        // TO-DO: handle case in which subj encloses obj, not handled
 
         return result;
     }
@@ -750,14 +765,14 @@ public class FG{
 
         do{
             // if Node is an untraced crossing, begin a new path
-            if(currentNode.isCrossing && !currentNode.traced){
+            if(currentNode.isCrossing && !currentNode.isTraced()){
                 crossings += 1;
 
                 FPath path = new FPath();
 
                 Node tracingNode = currentNode;
                 path.appendVertex(tracingNode.pos);
-                tracingNode.traced = true;
+                tracingNode.trace();
 
                 boolean moveToNext;         //True for traverse forward, False for traverse backwards
 
@@ -777,7 +792,7 @@ public class FG{
 
                 do{
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
 
                     if(tracingNode.isCrossing){
                         tracingNode = tracingNode.cross;
@@ -794,7 +809,7 @@ public class FG{
                         tracingNode = tracingNode.prev;
                     }
 
-                }while(!tracingNode.traced);
+                }while(!tracingNode.isTraced());
 
                 result.addContour(path);
             }
@@ -827,19 +842,19 @@ public class FG{
 
                     Node tracingNode = currentNode;
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
                     tracingNode = tracingNode.next;
                     do{
                         path.appendVertex(tracingNode.pos);
-                        tracingNode.traced = true;
+                        tracingNode.trace();
                         tracingNode = tracingNode.next;
-                    }while(!tracingNode.traced);
+                    }while(!tracingNode.isTraced());
 
                     result.addContour(path);
 
                 } else {
-                    // subj path is outside obj
-                    // do nothing
+                    // subj path is entirely outside obj
+                    // TO-DO!!! what if obj is enclosed in subj?
                 }
             } else {
                 // interiority unconfirmed
@@ -848,13 +863,13 @@ public class FG{
 
                 Node tracingNode = currentNode;
                 path.appendVertex(tracingNode.pos);
-                tracingNode.traced = true;
+                tracingNode.trace();
                 tracingNode = tracingNode.next;
                 do{
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
                     tracingNode = tracingNode.next;
-                }while(!tracingNode.traced);
+                }while(!tracingNode.isTraced());
 
                 result.addContour(path);
             }
@@ -881,14 +896,14 @@ public class FG{
 
         do{
             // if Node is an untraced crossing, begin a new path
-            if(currentNode.isCrossing && !currentNode.traced){
+            if(currentNode.isCrossing && !currentNode.isTraced()){
                 crossings += 1;
 
                 FPath path = new FPath();
 
                 Node tracingNode = currentNode;
                 path.appendVertex(tracingNode.pos);
-                tracingNode.traced = true;
+                tracingNode.trace();
 
                 boolean moveToNext;         //True for traverse forward, False for traverse backwards
 
@@ -908,7 +923,7 @@ public class FG{
 
                 do{
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
 
                     if(tracingNode.isCrossing){
                         tracingNode = tracingNode.cross;
@@ -925,7 +940,7 @@ public class FG{
                         tracingNode = tracingNode.prev;
                     }
 
-                }while(!tracingNode.traced);
+                }while(!tracingNode.isTraced());
 
                 result.addContour(path);
             }
@@ -962,13 +977,13 @@ public class FG{
 
                     Node tracingNode = currentNode;
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
                     tracingNode = tracingNode.next;
                     do{
                         path.appendVertex(tracingNode.pos);
-                        tracingNode.traced = true;
+                        tracingNode.trace();
                         tracingNode = tracingNode.next;
-                    }while(!tracingNode.traced);
+                    }while(!tracingNode.isTraced());
 
                     result.addContour(path);
                 }
@@ -979,18 +994,153 @@ public class FG{
 
                 Node tracingNode = currentNode;
                 path.appendVertex(tracingNode.pos);
-                tracingNode.traced = true;
+                tracingNode.trace();
                 tracingNode = tracingNode.next;
                 do{
                     path.appendVertex(tracingNode.pos);
-                    tracingNode.traced = true;
+                    tracingNode.trace();
                     tracingNode = tracingNode.next;
-                }while(!tracingNode.traced);
+                }while(!tracingNode.isTraced());
 
                 result.addContour(path);
             }
         }
     }
+
+
+    private static FPolygon trace_not(ArrayList<Node> subjNodes, ArrayList<Node> objNodes, FPolygon obj, FPolygon subj){
+        FPolygon result = new FPolygon();
+
+        for(Node subjStart : subjNodes){
+            tracePath_not(subjStart, obj, result);
+        }
+
+        return result;
+    }
+
+    private static void tracePath_not(Node start, FPolygon otherPoly, FPolygon result){
+        Node currentNode = start;
+
+        int crossings = 0;      //track crossing intersections
+
+        do{
+            // if Node is an untraced crossing, begin a new path
+            if(currentNode.isCrossing && !currentNode.isTraced()){
+                crossings += 1;
+
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.trace();
+
+                boolean moveToNext;         //True for traverse forward, False for traverse backwards
+                boolean onSubj = true;
+
+                // for NOT, avoid entry points as subj
+                // if a Node is an entry point -> traverse backwards, else forwards
+                if(tracingNode.isEntry){
+                    moveToNext = false;
+                } else {
+                    moveToNext = true;
+                }
+
+                if(moveToNext){
+                    tracingNode = tracingNode.next;
+                } else {
+                    tracingNode = tracingNode.prev;
+                }
+
+                do{
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.trace();
+
+                    if(tracingNode.isCrossing){
+                        tracingNode = tracingNode.cross;
+                        onSubj = !onSubj;
+
+                        if(tracingNode.isEntry){
+                            // traverse backwards for subj entry points, and forward for obj entry points
+                            moveToNext = !onSubj;
+                        } else {
+                            // traverse forwards for subj entry points, and backwards for obj entry points
+                            moveToNext = onSubj;
+                        }
+                    }
+
+                    if(moveToNext){
+                        tracingNode = tracingNode.next;
+                    } else {
+                        tracingNode = tracingNode.prev;
+                    }
+
+                }while(!tracingNode.isTraced());
+
+                result.addContour(path);
+            }
+            currentNode = currentNode.next;
+        } while(currentNode != start);
+
+        //if no crossing intersections, find a midpoint to determine if it is inside or outside
+        if(crossings == 0){
+            currentNode = start;
+            boolean confirmedInteriority = false;
+            boolean isInside = false;
+            do{
+                if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
+                    PVector a = currentNode.pos;
+                    PVector b = currentNode.next.pos;
+                    //get midpoint
+                    PVector mid = PVector.lerp(a,b,0.5f);
+                    isInside = isPointInPoly(mid, otherPoly);
+                    confirmedInteriority = true;
+                    break;
+                }
+                currentNode = currentNode.next;
+            } while (currentNode != start);
+
+            if(confirmedInteriority){
+                if(isInside){
+                    // subj path is inside obj
+                    // do nothing
+
+                } else {
+                    // subj path is outside obj
+                    // traverse nodes and add to result
+                    FPath path = new FPath();
+
+                    Node tracingNode = currentNode;
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.trace();
+                    tracingNode = tracingNode.next;
+                    do{
+                        path.appendVertex(tracingNode.pos);
+                        tracingNode.trace();
+                        tracingNode = tracingNode.next;
+                    }while(!tracingNode.isTraced());
+
+                    result.addContour(path);
+                }
+            } else {
+                // interiority unconfirmed
+                // should be identical polygons? add result
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.trace();
+                tracingNode = tracingNode.next;
+                do{
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.trace();
+                    tracingNode = tracingNode.next;
+                }while(!tracingNode.isTraced());
+
+                result.addContour(path);
+            }
+        }
+    }
+
 
     private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
         app.pushStyle();

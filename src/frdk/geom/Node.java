@@ -14,13 +14,12 @@ class Node{
     final static int LEFT_RIGHT = 7;
     final static int LEFT_LEFT = 8;
 
-    PVector pos;
-    Node next, prev, cross;
-    int sidedness;
+    public PVector pos;
+    public Node next, prev, cross;
+    public int sidedness;
     boolean isCrossing;
     boolean isEntry;
-
-    boolean traced;
+    private boolean traced;
 
     Node(PVector p){
         pos = new PVector(p.x, p.y);
@@ -40,7 +39,20 @@ class Node{
         cross = x;
     }
 
+    void trace(){
+        if(!traced){
+            traced = true;
+            if(isIntersection() && isCrossing){
+                cross.trace();
+            }
+        }
+    }
+
     boolean isIntersection(){
         return (cross != null);
+    }
+
+    boolean isTraced(){
+        return traced;
     }
 }

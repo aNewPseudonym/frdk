@@ -5,6 +5,8 @@ import processing.core.*;
 //import java.util.ArrayList;
 
 public class geomTestApp extends PApplet{
+
+    int traceType =  FG.NOT;
     
     FPolygon cursor;
     FPolygon boxA, boxB, boxC, boxD, boxE, boxF, boxG, boxH, boxI, boxJ, boxK, boxL;
@@ -79,9 +81,9 @@ public class geomTestApp extends PApplet{
         boxD = new FPolygon(boxVerts);
         boxD.centerAt(550, 200);
 
-        boxE = new FPolygon(boxVerts);
+        boxE = new FPolygon(diamondVerts);
         boxE.centerAt(200, 450);
-        boxF = new FPolygon(diamondVerts);
+        boxF = new FPolygon(boxVerts);
         boxF.centerAt(200, 450);
 
         boxG = new FPolygon(boxVerts);
@@ -126,20 +128,17 @@ public class geomTestApp extends PApplet{
         cursor.draw(this);
 
         // test boolean operations
-        //noStroke();
+        stroke(64);
         fill(0xff0ed1a3);
-        FG.booleanOp(boxA, boxB, this).draw(this);
-        FG.booleanOp(boxC, boxD, this).draw(this);
-        FG.booleanOp(boxE, boxF, this).draw(this);
-        FG.booleanOp(boxG, boxH, this).draw(this);
-        FG.booleanOp(boxI, boxJ, this).draw(this);
-        FG.booleanOp(boxK, boxL, this).draw(this);
 
-        FG.booleanOp(twisted, hollow, this).draw(this);
-
-        FG.booleanOp(smallBox, hollow2, this).draw(this);
-        
-        //FG.booleanOp(cursor, hollow2, this).draw(this);
+        FG.booleanOp_debug(boxA, boxB, traceType, this).draw(this);
+        FG.booleanOp_debug(boxC, boxD, traceType, this).draw(this);
+        FG.booleanOp_debug(boxE, boxF, traceType, this).draw(this);
+        FG.booleanOp_debug(boxG, boxH, traceType, this).draw(this);
+        FG.booleanOp_debug(boxI, boxJ, traceType, this).draw(this);
+        FG.booleanOp_debug(boxK, boxL, traceType, this).draw(this);
+        FG.booleanOp_debug(twisted, hollow, traceType, this).draw(this);
+        FG.booleanOp_debug(smallBox, hollow2, traceType, this).draw(this);
 
         noFill();
         stroke(255);
@@ -163,6 +162,18 @@ public class geomTestApp extends PApplet{
         hollow.draw(this);
         smallBox.draw(this);
 
+    }
+
+    public void keyPressed(){
+        if(key == ' '){
+            if(traceType == FG.OR){
+                traceType = FG.AND;
+            } else if(traceType == FG.AND){
+                traceType = FG.NOT;
+            } else {
+                traceType = FG.OR;
+            }
+        }
     }
 
 }
