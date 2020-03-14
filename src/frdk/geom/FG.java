@@ -753,7 +753,10 @@ public class FG{
         for(Node subjStart : subjNodes){
             tracePath_and(subjStart, obj, result);
         }
-        // TO-DO: handle case in which subj encloses obj, not handled
+        // handle case in which subj encloses obj path
+        for(Node objStart : objNodes){
+            trace_addUntracedInteriorPaths(objStart, subj, result);
+        }
 
         return result;
     }
@@ -868,6 +871,9 @@ public class FG{
                 do{
                     path.appendVertex(tracingNode.pos);
                     tracingNode.trace();
+                    if(tracingNode.isIntersection()){
+                        tracingNode.cross.trace();
+                    }
                     tracingNode = tracingNode.next;
                 }while(!tracingNode.isTraced());
 
@@ -999,6 +1005,9 @@ public class FG{
                 do{
                     path.appendVertex(tracingNode.pos);
                     tracingNode.trace();
+                    if(tracingNode.isIntersection()){
+                        tracingNode.cross.trace();
+                    }
                     tracingNode = tracingNode.next;
                 }while(!tracingNode.isTraced());
 
@@ -1007,12 +1016,15 @@ public class FG{
         }
     }
 
-
     private static FPolygon trace_not(ArrayList<Node> subjNodes, ArrayList<Node> objNodes, FPolygon obj, FPolygon subj){
         FPolygon result = new FPolygon();
 
         for(Node subjStart : subjNodes){
             tracePath_not(subjStart, obj, result);
+        }
+        // handle case in which subj encloses obj path
+        for(Node objStart : objNodes){
+            trace_addUntracedInteriorPaths(objStart, subj, result);
         }
 
         return result;
@@ -1141,6 +1153,72 @@ public class FG{
         }
     }
 
+    private static void trace_addUntracedInteriorPaths(Node start, FPolygon otherPoly, FPolygon result){
+        Node currentNode = start;
+        // confirm all nodes in path are untraced
+        do{
+            if(currentNode.isTraced()){
+                return;
+            }
+            currentNode = currentNode.next;
+        } while (currentNode != start);
+
+        // find acceptable midpoint to test interiority
+        currentNode = start;
+        boolean confirmedInteriority = false;
+        boolean isInside = false;
+        do{
+            if(currentNode.sidedness != Node.ON_ON && currentNode.sidedness != Node.LEFT_ON && currentNode.sidedness != Node.RIGHT_ON){
+                PVector a = currentNode.pos;
+                PVector b = currentNode.next.pos;
+                //get midpoint
+                PVector mid = PVector.lerp(a,b,0.5f);
+                isInside = isPointInPoly(mid, otherPoly);
+                confirmedInteriority = true;
+                break;
+            }
+            currentNode = currentNode.next;
+        } while (currentNode != start);
+
+        if(confirmedInteriority){
+            if(isInside){
+                // path is inside otherPoly
+                // traverse nodes and add to result
+                FPath path = new FPath();
+
+                Node tracingNode = currentNode;
+                path.appendVertex(tracingNode.pos);
+                tracingNode.trace();
+                tracingNode = tracingNode.next;
+                do{
+                    path.appendVertex(tracingNode.pos);
+                    tracingNode.trace();
+                    tracingNode = tracingNode.next;
+                }while(!tracingNode.isTraced());
+
+                result.addContour(path);
+
+            } else {
+                // path is entirely outside otherPoly, do nothing
+            }
+        } else {
+            // interiority unconfirmed, should be identical polygons
+            // add result, to complete NOT case
+            FPath path = new FPath();
+
+            Node tracingNode = currentNode;
+            path.appendVertex(tracingNode.pos);
+            tracingNode.trace();
+            tracingNode = tracingNode.next;
+            do{
+                path.appendVertex(tracingNode.pos);
+                tracingNode.trace();
+                tracingNode = tracingNode.next;
+            }while(!tracingNode.isTraced());
+
+            result.addContour(path);
+        }
+    }
 
     private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
         app.pushStyle();
