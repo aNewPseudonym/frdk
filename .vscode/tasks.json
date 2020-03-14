@@ -28,7 +28,8 @@
                 "lib\\*.jar",
                 "src\\frdk\\*.java",
                 "src\\frdk\\input\\*.java",
-                "src\\frdk\\ui\\*.java"
+                "src\\frdk\\ui\\*.java",
+                "src\\frdk\\geom\\*.java"
             ],
             "problemMatcher": []
         },
@@ -43,7 +44,7 @@
                 "showReuseMessage": true,
                 "clear": false
             },
-            "command": "java -cp \\\"bin;lib/*\\\" frdk/uiTestApp",
+            "command": "java -cp \\\"bin;lib/*\\\" frdk/geomTestApp",
             "group": {
                 "kind": "test",
                 "isDefault": true

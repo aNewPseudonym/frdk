@@ -767,10 +767,17 @@ public class FG{
         int crossings = 0;      //track crossing intersections
 
         do{
-            // if Node is an untraced crossing, begin a new path
-            if(currentNode.isCrossing && !currentNode.isTraced()){
+            if(currentNode.isCrossing){
+                // count all crossings
                 crossings += 1;
 
+                // continue past Node if already traced
+                if(currentNode.isTraced()){
+                    currentNode = currentNode.next;
+                    continue;
+                }
+
+                // if Node is an untraced crossing, begin a new path
                 FPath path = new FPath();
 
                 Node tracingNode = currentNode;
@@ -901,10 +908,17 @@ public class FG{
         int crossings = 0;      //track crossing intersections
 
         do{
-            // if Node is an untraced crossing, begin a new path
-            if(currentNode.isCrossing && !currentNode.isTraced()){
+            if(currentNode.isCrossing){
+                // count all crossings
                 crossings += 1;
 
+                // continue past Node if already traced
+                if(currentNode.isTraced()){
+                    currentNode = currentNode.next;
+                    continue;
+                }
+
+                // if Node is an untraced crossing, begin a new path
                 FPath path = new FPath();
 
                 Node tracingNode = currentNode;
@@ -914,7 +928,7 @@ public class FG{
                 boolean moveToNext;         //True for traverse forward, False for traverse backwards
 
                 // for OR, avoid entry points
-                // if a Node is an entry point -> traverse backwards, else forwards
+                // if a Node is an entry point -> traverse backwards, else -> forwards
                 if(tracingNode.isEntry){
                     moveToNext = false;
                 } else {
@@ -1036,10 +1050,17 @@ public class FG{
         int crossings = 0;      //track crossing intersections
 
         do{
-            // if Node is an untraced crossing, begin a new path
-            if(currentNode.isCrossing && !currentNode.isTraced()){
+            if(currentNode.isCrossing){
+                // count all crossings
                 crossings += 1;
 
+                // continue past Node if already traced
+                if(currentNode.isTraced()){
+                    currentNode = currentNode.next;
+                    continue;
+                }
+
+                // if Node is an untraced crossing, begin a new path
                 FPath path = new FPath();
 
                 Node tracingNode = currentNode;

@@ -6,9 +6,10 @@ import processing.core.*;
 
 public class geomTestApp extends PApplet{
 
-    int traceType =  FG.NOT;
+    int traceType =  FG.OR;
     
     FPolygon cursor;
+    FPolygon box;
     FPolygon boxA, boxB, boxC, boxD, boxE, boxF, boxG, boxH, boxI, boxJ, boxK, boxL;
     FPolygon hollow, twisted;
     FPolygon hollow2, smallBox;
@@ -71,6 +72,13 @@ public class geomTestApp extends PApplet{
     }
 
     public void setup() {
+        box = new FPolygon(boxVerts);
+        box.centerAt(width/2, height/2);
+        
+        cursor = new FPolygon(diamondVerts);
+        cursor.scale(1.5f);
+        cursor.centerAt(width/2 + 175, height/2);
+
         boxA = new FPolygon(boxVerts);
         boxA.centerAt(200, 200);
         boxB = new FPolygon(boxVerts);
@@ -113,54 +121,62 @@ public class geomTestApp extends PApplet{
         hollow2.centerAt(width/2, 1300);
         smallBox = new FPolygon(boxVerts);
         smallBox.centerAt(450, 1350);
-
-        cursor = new FPolygon(circVerts);
-        cursor.centerAt(width/2, height/2);
     }
 
     public void draw() {
         background(128);
-        
-        // draw cursor
+
         cursor.centerAt(mouseX, mouseY);
         noFill();
         strokeWeight(2);
-        cursor.draw(this);
-
-        // test boolean operations
+        //cursor.draw(this);
+        
+        //box.draw(this);
+        
         stroke(64);
         fill(0xff0ed1a3);
+        FG.booleanOp_debug(box, cursor, traceType, this).draw(this);
+        
+        // // draw cursor
+        // cursor.centerAt(mouseX, mouseY);
+        // noFill();
+        // strokeWeight(2);
+        // cursor.draw(this);
 
-        FG.booleanOp_debug(boxA, boxB, traceType, this).draw(this);
-        FG.booleanOp_debug(boxC, boxD, traceType, this).draw(this);
-        FG.booleanOp_debug(boxE, boxF, traceType, this).draw(this);
-        FG.booleanOp_debug(boxG, boxH, traceType, this).draw(this);
-        FG.booleanOp_debug(boxI, boxJ, traceType, this).draw(this);
-        FG.booleanOp_debug(boxK, boxL, traceType, this).draw(this);
-        FG.booleanOp_debug(twisted, hollow, traceType, this).draw(this);
-        FG.booleanOp_debug(smallBox, hollow2, traceType, this).draw(this);
+        // // test boolean operations
+        // stroke(64);
+        // fill(0xff0ed1a3);
 
-        noFill();
-        stroke(255);
-        strokeWeight(4);
-        boxA.draw(this);
-        boxC.draw(this);
-        boxE.draw(this);
-        boxG.draw(this);
-        boxI.draw(this);
-        boxK.draw(this);
-        twisted.draw(this);
-        hollow2.draw(this);
-        stroke(0);
-        strokeWeight(2);
-        boxB.draw(this);
-        boxD.draw(this);
-        boxF.draw(this);
-        boxH.draw(this);
-        boxJ.draw(this);
-        boxL.draw(this);
-        hollow.draw(this);
-        smallBox.draw(this);
+        // FG.booleanOp_debug(boxA, boxB, traceType, this).draw(this);
+        // FG.booleanOp_debug(boxC, boxD, traceType, this).draw(this);
+        // FG.booleanOp_debug(boxE, boxF, traceType, this).draw(this);
+        // FG.booleanOp_debug(boxG, boxH, traceType, this).draw(this);
+        // FG.booleanOp_debug(boxI, boxJ, traceType, this).draw(this);
+        // FG.booleanOp_debug(boxK, boxL, traceType, this).draw(this);
+        // FG.booleanOp_debug(twisted, hollow, traceType, this).draw(this);
+        // FG.booleanOp_debug(smallBox, hollow2, traceType, this).draw(this);
+
+        // noFill();
+        // stroke(255);
+        // strokeWeight(4);
+        // boxA.draw(this);
+        // boxC.draw(this);
+        // boxE.draw(this);
+        // boxG.draw(this);
+        // boxI.draw(this);
+        // boxK.draw(this);
+        // twisted.draw(this);
+        // hollow2.draw(this);
+        // stroke(0);
+        // strokeWeight(2);
+        // boxB.draw(this);
+        // boxD.draw(this);
+        // boxF.draw(this);
+        // boxH.draw(this);
+        // boxJ.draw(this);
+        // boxL.draw(this);
+        // hollow.draw(this);
+        // smallBox.draw(this);
 
     }
 
