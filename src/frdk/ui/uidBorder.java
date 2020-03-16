@@ -1,5 +1,6 @@
 package frdk.ui;
 
+import frdk.geom.*;
 import processing.core.*;
 
 public class uidBorder extends uiDecorator{
@@ -12,16 +13,14 @@ public class uidBorder extends uiDecorator{
     }
 
     public void drawDecorator(uiCanvas canvas){
-        PShape ps = canvas.shape;
-        ps.disableStyle();
-
+        FPolygon shape = canvas.shape;
         PGraphics pg = canvas.pg;
         pg.pushStyle();
 
         pg.stroke(stroke);
         pg.strokeWeight(weight);
         pg.noFill();
-        pg.shape(ps,0,0);
+        shape.draw(pg);
 
         pg.popStyle();
     }

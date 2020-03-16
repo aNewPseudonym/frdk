@@ -44,6 +44,7 @@ public class uiTestApp extends PApplet{
         }
     }
 
+    // TO-DO: selecting seems slow? iterating may be to slow...
     public void checkSelectables(uiCanvas canvas, int x, int y){
         if(canvas instanceof Selectable){
             if( (canvas == cp.getCanvas(x, y)) && !((Selectable)canvas).isSelected() ){

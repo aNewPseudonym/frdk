@@ -2,14 +2,16 @@ package frdk.ui;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import processing.core.*;
+import frdk.geom.*;
 
 public class uiCanvas implements PConstants{
     private static PApplet app;
 
     public PVector pos;     // either top-left corner, or center
-    public PShape shape;    // shape of canvas - RECT by default
+    //public PShape shape;    // shape of canvas - RECT by default
+    public FPolygon shape;
+
     public PGraphics pg;    // where canvas and decorators draw to, sized by dim
     public PGraphics alphaMask;
     
@@ -32,7 +34,15 @@ public class uiCanvas implements PConstants{
     // constructor w/o PShape, generates RECT PShape by default
     public uiCanvas(float posX, float posY, float dimX, float dimY) {
         pos = new PVector(posX, posY);
-        shape = app.createShape(RECT,0,0,dimX,dimY);
+
+        shape = new FPolygon();
+        FPath path = new FPath();
+        path.appendVertex(new PVector(0,0));
+        path.appendVertex(new PVector(dimX,0));
+        path.appendVertex(new PVector(dimX,dimY));
+        path.appendVertex(new PVector(0,dimY));
+        shape.addContour(path);
+
         pg = app.createGraphics(app.width, app.height);
         alphaMask = app.createGraphics(pg.width, pg.height);
 
@@ -48,7 +58,7 @@ public class uiCanvas implements PConstants{
     }
 
     // constructor with PShape
-    public uiCanvas(float posX, float posY, PShape ps) {
+    public uiCanvas(float posX, float posY, FPolygon ps) {
         pos = new PVector(posX, posY);
         shape = ps;
         pg = app.createGraphics(app.width, app.height);
@@ -145,12 +155,12 @@ public class uiCanvas implements PConstants{
     public void drawCanvas(float x, float y) {
         if(showSelf){
             // update clipping mask
-            shape.disableStyle();
             alphaMask.beginDraw();
             alphaMask.background(0);
             alphaMask.noStroke();
             alphaMask.fill(255);
-            alphaMask.shape(shape, x+pos.x, y+pos.y);
+            alphaMask.translate(x+pos.x, y+pos.y);
+            shape.draw(alphaMask);
             alphaMask.endDraw();
 
             // prepare PGraphics buffer, translating to absolute position

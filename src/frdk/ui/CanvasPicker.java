@@ -5,6 +5,8 @@ import processing.core.*;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import frdk.geom.FPolygon;
+
 //TO-DO: add ability to specify specific canvases for picking - 
 //  i.e., pass it a set/list and only have it track those,
 //  as opposed to automatically tracking a whole nested tree.
@@ -56,15 +58,14 @@ public class CanvasPicker{
     }
 
     private void drawCanvas(uiCanvas currentCanvas){
-        PShape ps = currentCanvas.shape;
-        ps.disableStyle();
+        FPolygon shape = currentCanvas.shape;
         
         buffer.pushMatrix();
         
         PVector absPos = currentCanvas.getAbsolutePosition();
         buffer.translate(absPos.x, absPos.y);
         buffer.fill(currentID - 16777215);
-        buffer.shape(ps);
+        shape.draw(buffer);
 
         buffer.popMatrix();
 

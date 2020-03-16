@@ -2,7 +2,7 @@ package frdk.ui;
 
 import processing.core.*;
 
-public class uiText extends uiCanvas implements PConstants{
+public class uiText extends uiCanvas{
     String content;
     PFont font;
     int fill, stroke;
