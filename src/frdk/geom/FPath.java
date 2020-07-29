@@ -161,9 +161,9 @@ public class FPath extends FShape{
         PVector cross = toPrev.cross(toNext);
 
         if(cross.z >= 0){
-            return true;
-        } else {
             return false;
+        } else {
+            return true;
         }
     }
     public void confirmCW(){

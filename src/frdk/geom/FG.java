@@ -124,6 +124,7 @@ public class FG{
         return false;
     }
 
+    // TO-DO: make more robust, account for literal edge and corner cases
     public static boolean isPointInPoly(PVector point, FPolygon poly){
         PVector intPoint = new PVector();
         int count1 = 0;
@@ -689,8 +690,9 @@ public class FG{
     private static void tracePath_and(Node start, FPolygon otherPoly, FPolygon result){
         Node currentNode = start;
 
-        int crossings = 0;      //track crossing intersections
+        int crossings = 0;      //track crossings for non-intersecting cases
 
+        //searching for untraced crossings loop
         do{
             if(currentNode.isCrossing){
                 // count all crossings
@@ -722,26 +724,34 @@ public class FG{
                 if(moveToNext){
                     tracingNode = tracingNode.next;
                 } else {
-                    tracingNode = tracingNode.prev;
+                    //tracingNode = tracingNode.prev;
+                    // jump to cross instead of reversing, maintain directionality
+                    tracingNode = tracingNode.cross.next;
                 }
 
+                // tracing loop
                 do{
                     path.appendVertex(tracingNode.pos);
                     tracingNode.trace();
 
                     if(tracingNode.isCrossing){
+                        // determine next direction at crossing from entry/exit flag
                         tracingNode = tracingNode.cross;
                         if(tracingNode.isEntry){
                             moveToNext = true;
                         } else {
                             moveToNext = false;
                         }
-                    }
-
-                    if(moveToNext){
-                        tracingNode = tracingNode.next;
+                        if(moveToNext){
+                            tracingNode = tracingNode.next;
+                        } else {
+                            //tracingNode = tracingNode.prev;
+                            // jump to cross instead of reversing, maintain directionality
+                            tracingNode = tracingNode.cross.next;
+                        }
                     } else {
-                        tracingNode = tracingNode.prev;
+                        // continue forward if not a crossing
+                        tracingNode = tracingNode.next;
                     }
 
                 }while(!tracingNode.isTraced());
@@ -863,7 +873,9 @@ public class FG{
                 if(moveToNext){
                     tracingNode = tracingNode.next;
                 } else {
-                    tracingNode = tracingNode.prev;
+                    //tracingNode = tracingNode.prev;
+                    //jump to cross instead of reversing, maintain directionality
+                    tracingNode = tracingNode.cross.next;
                 }
 
                 do{
@@ -871,18 +883,23 @@ public class FG{
                     tracingNode.trace();
 
                     if(tracingNode.isCrossing){
+                        // determine next direction at crossing from entry/exit flag
                         tracingNode = tracingNode.cross;
                         if(tracingNode.isEntry){
                             moveToNext = false;
                         } else {
                             moveToNext = true;
                         }
-                    }
-
-                    if(moveToNext){
-                        tracingNode = tracingNode.next;
+                        if(moveToNext){
+                            tracingNode = tracingNode.next;
+                        } else {
+                            // tracingNode = tracingNode.prev;
+                            // jump to cross instead of reversing, maintain directionality
+                            tracingNode = tracingNode.cross.next;
+                        }
                     } else {
-                        tracingNode = tracingNode.prev;
+                        // continue forward if not a crossing
+                        tracingNode = tracingNode.next;
                     }
 
                 }while(!tracingNode.isTraced());
@@ -963,7 +980,8 @@ public class FG{
         }
         // handle case in which subj encloses obj path
         for(Node objStart : objNodes){
-            trace_addUntracedInteriorPaths(objStart, subj, result);
+            // reverse any obj paths added this way
+            trace_addUntracedInteriorPaths(objStart, subj, result, true);
         }
 
         return result;
@@ -1006,7 +1024,10 @@ public class FG{
                 if(moveToNext){
                     tracingNode = tracingNode.next;
                 } else {
-                    tracingNode = tracingNode.prev;
+                    //tracingNode = tracingNode.prev;
+                    //cross instead of reversing, maintain directionality
+                    tracingNode = tracingNode.cross.prev;
+                    onSubj = !onSubj;
                 }
 
                 do{
@@ -1100,6 +1121,10 @@ public class FG{
     }
 
     private static void trace_addUntracedInteriorPaths(Node start, FPolygon otherPoly, FPolygon result){
+        trace_addUntracedInteriorPaths(start, otherPoly, result, false);
+    }
+
+    private static void trace_addUntracedInteriorPaths(Node start, FPolygon otherPoly, FPolygon result, boolean reverse){
         Node currentNode = start;
         // confirm all nodes in path are untraced
         do{
@@ -1142,6 +1167,9 @@ public class FG{
                     tracingNode = tracingNode.next;
                 }while(!tracingNode.isTraced());
 
+                if(reverse){
+                    path.reverse();
+                }
                 result.addContour(path);
 
             } else {
@@ -1162,6 +1190,9 @@ public class FG{
                 tracingNode = tracingNode.next;
             }while(!tracingNode.isTraced());
 
+            if(reverse){
+                path.reverse();
+            }
             result.addContour(path);
         }
     }
