@@ -68,7 +68,7 @@ public class geomTestApp extends PApplet{
     }
 
     public void settings() {
-        size(800, 1600);
+        size(800, 800);
     }
 
     public void setup() {
@@ -133,9 +133,9 @@ public class geomTestApp extends PApplet{
         
         //box.draw(this);
         
-        stroke(64);
-        fill(0xff0ed1a3);
-        FG.booleanOp_debug(box, cursor, traceType, this).draw(this);
+        //stroke(64);
+        //fill(0xff0ed1a3);
+        //FG.booleanOp_debug(box, cursor, traceType, this).draw(this);
         
         // // draw cursor
         // cursor.centerAt(mouseX, mouseY);
@@ -143,40 +143,40 @@ public class geomTestApp extends PApplet{
         // strokeWeight(2);
         // cursor.draw(this);
 
-        // // test boolean operations
-        // stroke(64);
-        // fill(0xff0ed1a3);
+        // test boolean operations
+        stroke(64);
+        fill(0xff0ed1a3);
 
-        // FG.booleanOp_debug(boxA, boxB, traceType, this).draw(this);
-        // FG.booleanOp_debug(boxC, boxD, traceType, this).draw(this);
-        // FG.booleanOp_debug(boxE, boxF, traceType, this).draw(this);
-        // FG.booleanOp_debug(boxG, boxH, traceType, this).draw(this);
-        // FG.booleanOp_debug(boxI, boxJ, traceType, this).draw(this);
-        // FG.booleanOp_debug(boxK, boxL, traceType, this).draw(this);
-        // FG.booleanOp_debug(twisted, hollow, traceType, this).draw(this);
-        // FG.booleanOp_debug(smallBox, hollow2, traceType, this).draw(this);
+        FG.booleanOp_debug(boxA, boxB, traceType, this).draw(this);
+        FG.booleanOp_debug(boxC, boxD, traceType, this).draw(this);
+        FG.booleanOp_debug(boxE, boxF, traceType, this).draw(this);
+        FG.booleanOp_debug(boxG, boxH, traceType, this).draw(this);
+        FG.booleanOp_debug(boxI, boxJ, traceType, this).draw(this);
+        FG.booleanOp_debug(boxK, boxL, traceType, this).draw(this);
+        FG.booleanOp_debug(twisted, hollow, traceType, this).draw(this);
+        FG.booleanOp_debug(smallBox, hollow2, traceType, this).draw(this);
 
-        // noFill();
-        // stroke(255);
-        // strokeWeight(4);
-        // boxA.draw(this);
-        // boxC.draw(this);
-        // boxE.draw(this);
-        // boxG.draw(this);
-        // boxI.draw(this);
-        // boxK.draw(this);
-        // twisted.draw(this);
-        // hollow2.draw(this);
-        // stroke(0);
-        // strokeWeight(2);
-        // boxB.draw(this);
-        // boxD.draw(this);
-        // boxF.draw(this);
-        // boxH.draw(this);
-        // boxJ.draw(this);
-        // boxL.draw(this);
-        // hollow.draw(this);
-        // smallBox.draw(this);
+        noFill();
+        stroke(255);
+        strokeWeight(4);
+        boxA.draw(this);
+        boxC.draw(this);
+        boxE.draw(this);
+        boxG.draw(this);
+        boxI.draw(this);
+        boxK.draw(this);
+        twisted.draw(this);
+        hollow2.draw(this);
+        stroke(0);
+        strokeWeight(2);
+        boxB.draw(this);
+        boxD.draw(this);
+        boxF.draw(this);
+        boxH.draw(this);
+        boxJ.draw(this);
+        boxL.draw(this);
+        hollow.draw(this);
+        smallBox.draw(this);
 
     }
 

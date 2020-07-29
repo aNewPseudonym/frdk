@@ -216,7 +216,7 @@ public class FPath extends FShape{
 
         return (high - low);
     }
-    // returns 'vertex centroid'
+    // returns 'vertex centroid', average of all vertices
     public PVector getCentroid(){
         if(verts.length < 1){
             return null;

@@ -127,14 +127,7 @@ public class FG{
     public static boolean isPointInPoly(PVector point, FPolygon poly){
         PVector intPoint = new PVector();
         int count1 = 0;
-        PVector[] verts = poly.getBound().getVerts();
-        for (int i = 0; i < verts.length; i++) {
-            PVector v1 = verts[i];
-            PVector v2 = verts[ (i+1) % verts.length ];
-            if( rayToLine(point, PVector.add(point, testDir), v1, v2, intPoint) ) {
-                count1++;
-            }
-        }
+        PVector[] verts;
         for(int h = 0; h < poly.contourCount(); h++){
             verts = poly.getContour(h).getVerts();
             for (int i = 0; i < verts.length; i++) {
@@ -154,62 +147,8 @@ public class FG{
         ArrayList<PVector> intPoints = new ArrayList<PVector>();
 
         PVector a, b, c, d;
-        
-        PVector[] p1Bound = p1.getBound().getVerts();
-        PVector[] p2Bound = p2.getBound().getVerts();
-
-        //bound-bound check
-        for(int i = 0; i < p1Bound.length; i++){
-            a = p1Bound[i];
-            b = p1Bound[(i+1) % p1Bound.length];
-            for(int j = 0; j < p2Bound.length; j++){
-                c = p2Bound[j];
-                d = p2Bound[(j+1) % p2Bound.length];
-                PVector intPoint = new PVector();
-
-                if (lineToLine(a,b,c,d,intPoint)) {
-                    intPoints.add(intPoint);
-                }
-            }
-        }
-
-        //contours-bound check
         PVector[] p1Contour;
-        for(int h = 0; h < p1.contourCount(); h++){
-            p1Contour = p1.getContour(h).getVerts();
-            for(int i = 0; i < p1Contour.length; i++){
-                a = p1Contour[i];
-                b = p1Contour[(i+1) % p1Contour.length];
-                for(int j = 0; j < p2Bound.length; j++){
-                    c = p2Bound[j];
-                    d = p2Bound[(j+1) % p2Bound.length];
-                    PVector intPoint = new PVector();
-    
-                    if (lineToLine(a,b,c,d,intPoint)) {
-                        intPoints.add(intPoint);
-                    }
-                }
-            }
-        }
-
-        //bound-contours check
         PVector[] p2Contour;
-        for(int h = 0; h < p2.contourCount(); h++){
-            p2Contour = p2.getContour(h).getVerts();
-            for(int i = 0; i < p2Contour.length; i++){
-                a = p2Contour[i];
-                b = p2Contour[(i+1) % p2Contour.length];
-                for(int j = 0; j < p1Bound.length; j++){
-                    c = p1Bound[j];
-                    d = p1Bound[(j+1) % p1Bound.length];
-                    PVector intPoint = new PVector();
-    
-                    if (lineToLine(a,b,c,d,intPoint)) {
-                        intPoints.add(intPoint);
-                    }
-                }
-            }
-        }
 
         //contours-contours check
         for(int h = 0; h < p1.contourCount(); h++){
@@ -240,19 +179,6 @@ public class FG{
         ArrayList<PVector> intPoints = new ArrayList<PVector>();
 
         PVector c, d;
-        
-        PVector[] bound = poly.getBound().getVerts();
-
-        //bound check
-        for(int i = 0; i < bound.length; i++){
-            c = bound[i];
-            d = bound[(i+1) % bound.length];
-            PVector intPoint = new PVector();
-
-            if (lineToLine(a,b,c,d,intPoint)) {
-                intPoints.add(intPoint);
-            }
-        }
 
         //contours check
         PVector[] contour;
@@ -304,6 +230,7 @@ public class FG{
                 result = trace_not(subjNodes, objNodes, obj, subj);
                 break;
             case XOR:
+            //TO-DO: fix XOR once FGroup functionality is ready
                 result = trace_or(subjNodes, objNodes, obj, subj);
                 break;
         }
@@ -317,8 +244,6 @@ public class FG{
     private static ArrayList<Node> initNodes(FPolygon poly){
         ArrayList<Node> nodes = new ArrayList<Node>();
         
-        nodes.add(initNodeChain(poly.getBound()));
-
         for(int i = 0; i < poly.contourCount(); i++){
             nodes.add(initNodeChain(poly.getContour(i)));
         }
@@ -354,7 +279,7 @@ public class FG{
             do{
                 for(Node objStart : objNodes){
                     b = a.next;
-                    //test this segment against this object Node chain
+                    //check this segment against this object Node chain
                     checkIntersections(a, b, objStart, objStart);
                 }
                 // increment segment

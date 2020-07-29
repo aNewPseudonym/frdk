@@ -23,12 +23,12 @@ public abstract class FShape implements PConstants{
 
     //--- QUERY ---
     //change wording for this? or remove?
-    abstract public PVector[] getVerts();
+    //abstract public PVector[] getVerts();
     abstract public int vertCount();
 
     //--- MEASURING ---
-    abstract public float getWidth();
-    abstract public float getHeight();
+    // abstract public float getWidth();
+    // abstract public float getHeight();
     abstract public PVector getCentroid();
     abstract public PVector getMidpoint();
 

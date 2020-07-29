@@ -40,6 +40,27 @@ public class FGroup extends FShape{
     }
 
     //--- QUERY ---
+    public int vertCount(){
+        int totalVerts = 0;
+        for(int i = 0; i < children.length; i++){
+            totalVerts += children[i].vertCount();
+        }
+        return totalVerts;
+    }
+
+    // public PVector[] getVerts(){
+    //     int totalVerts = vertCount();
+    //     PVector[] allVerts = new PVector[totalVerts];
+        
+    //     int index = 0;
+    //     for(int i = 0; i < children.length; i++){
+    //         PVector[] newVerts = children[i].getVerts();
+    //         System.arraycopy(allVerts, index, newVerts, 0, newVerts.length);
+    //         index += children[i].vertCount();
+    //     }
+    //     return allVerts;
+    // }
+
     public FShape getChild(int index){
         FShape child = null;
         if(index > -1 && index < children.length){
@@ -50,59 +71,41 @@ public class FGroup extends FShape{
     public int childCount(){
         return children.length;
     }
-    public PVector[] getVerts(){
-        int totalVerts = vertCount();
-        PVector[] allVerts = new PVector[totalVerts];
-        
-        int index = 0;
-        for(int i = 0; i < children.length; i++){
-            PVector[] newVerts = children[i].getVerts();
-            System.arraycopy(allVerts, index, newVerts, 0, newVerts.length);
-            index += children[i].vertCount();
-        }
-        return allVerts;
-    }
-    public int vertCount(){
-        int totalVerts = 0;
-        for(int i = 0; i < children.length; i++){
-            totalVerts += children[i].vertCount();
-        }
-        return totalVerts;
-    }
     
     //--- MEASURING ---
-    public float getWidth(){
-        float low = 0;
-        float high = 0;
-        for(int i = 0; i < children.length; i++){
-            PVector[] verts = children[i].getVerts();
-            if( (i == 0) && (verts.length > 1) ){
-                low = verts[0].x;
-                high = verts[0].x;
-            }
-            for(int j = 0; j < verts.length; j++){
-                if(verts[j].x < low){ low = verts[j].x; }
-                if(verts[j].x > high){ high = verts[j].x; }
-            }
-        }
-        return (high - low);
-    }
-    public float getHeight(){
-        float low = 0;
-        float high = 0;
-        for(int i = 0; i < children.length; i++){
-            PVector[] verts = children[i].getVerts();
-            if( (i == 0) && (verts.length > 1) ){
-                low = verts[0].y;
-                high = verts[0].y;
-            }
-            for(int j = 0; j < verts.length; j++){
-                if(verts[j].y < low){ low = verts[j].y; }
-                if(verts[j].y > high){ high = verts[j].y; }
-            }
-        }
-        return (high - low);
-    }
+    // public float getWidth(){
+    //     float low = 0;
+    //     float high = 0;
+    //     for(int i = 0; i < children.length; i++){
+    //         PVector[] verts = children[i].getVerts();
+    //         if( (i == 0) && (verts.length > 1) ){
+    //             low = verts[0].x;
+    //             high = verts[0].x;
+    //         }
+    //         for(int j = 0; j < verts.length; j++){
+    //             if(verts[j].x < low){ low = verts[j].x; }
+    //             if(verts[j].x > high){ high = verts[j].x; }
+    //         }
+    //     }
+    //     return (high - low);
+    // }
+    // public float getHeight(){
+    //     float low = 0;
+    //     float high = 0;
+    //     for(int i = 0; i < children.length; i++){
+    //         PVector[] verts = children[i].getVerts();
+    //         if( (i == 0) && (verts.length > 1) ){
+    //             low = verts[0].y;
+    //             high = verts[0].y;
+    //         }
+    //         for(int j = 0; j < verts.length; j++){
+    //             if(verts[j].y < low){ low = verts[j].y; }
+    //             if(verts[j].y > high){ high = verts[j].y; }
+    //         }
+    //     }
+    //     return (high - low);
+    // }
+
     public PVector getCentroid(){
         PVector avg = new PVector();
         int totalVerts = 0;
@@ -113,26 +116,11 @@ public class FGroup extends FShape{
         return avg.div(totalVerts);
     }
     public PVector getMidpoint(){
-        float lowX = 0;
-        float highX = 0;
-        float lowY = 0;
-        float highY = 0;
+        PVector sum = new PVector(0,0);
         for(int i = 0; i < children.length; i++){
-            PVector[] verts = children[i].getVerts();
-            if( (i == 0) && (verts.length > 1) ){
-                lowX = verts[0].x;
-                highX = verts[0].x;
-                lowY = verts[0].y;
-                highY = verts[0].y;
-            }
-            for(int j = 0; j < verts.length; j++){
-                if(verts[j].x < lowX){ lowX = verts[j].x; }
-                if(verts[j].x > highX){ highX = verts[j].x; }
-                if(verts[j].y < lowY){ lowY = verts[j].y; }
-                if(verts[j].y > highY){ highY = verts[j].y; }
-            }
+            sum.add(children[i].getMidpoint());
         }
-        return new PVector( (highX+lowX)/2, (highY+lowY)/2 );
+        return sum.div(children.length);
     }
 
     //--- ALIGNING ---
