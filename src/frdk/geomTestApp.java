@@ -6,7 +6,7 @@ import processing.core.*;
 
 public class geomTestApp extends PApplet{
 
-    int traceType =  FG.OR;
+    int traceType = FG.AND;
     
     FPolygon cursor;
     FPolygon box;
@@ -22,45 +22,77 @@ public class geomTestApp extends PApplet{
         new PVector(-100,0),
         new PVector(-70.7f,70.7f),
         new PVector(0,100),
-        new PVector(70.7f,70.7f),
+        new PVector(70.7f,70.7f)
     };
     PVector[] boxVerts = {
         new PVector(100,100),
         new PVector(200,100),
         new PVector(200,200),
-        new PVector(100,200),
+        new PVector(100,200)
     };
     PVector[] diamondVerts = {
         new PVector(0,100),
         new PVector(100,0),
         new PVector(200,100),
-        new PVector(100,200),
+        new PVector(100,200)
     };
     PVector[] cutBoxVerts = {
         new PVector(100,100),
         new PVector(200,100),
         new PVector(200,200),
         new PVector(100,200),
-        new PVector(150,150),
+        new PVector(150,150)
     };
     PVector[] twistedVerts = {
         new PVector(0,0),
         new PVector(200,0),
         new PVector(0,200),
-        new PVector(200,200),
+        new PVector(200,200)
     };
     PVector[] longBoxVerts = {
         new PVector(0,0),
         new PVector(400,0),
         new PVector(400,100),
-        new PVector(0,100),
+        new PVector(0,100)
     };
     PVector[] longHoleVerts = {
         new PVector(100,25),
-        new PVector(300,25),
-        new PVector(300,75),
         new PVector(100,75),
+        new PVector(300,75),
+        new PVector(300,25)
     };
+
+    // - - -
+
+    // FPolygon box;
+    // PVector[] boxVerts = {
+    //     new PVector(0,0),
+    //     new PVector(100,0),
+    //     new PVector(100,100),
+    //     new PVector(0,100),
+    // };
+
+    // FPolygon cursor;
+    // PVector[] diamondVerts = {
+    //     new PVector(0,100),
+    //     new PVector(100,0),
+    //     new PVector(200,100),
+    //     new PVector(100,200),
+    // };
+
+    // PVector[] holeVerts = {
+    //     new PVector(85,85),
+    //     new PVector(85,115),
+    //     new PVector(115,115),
+    //     new PVector(115,85),
+    // };
+
+    // PVector[] voidVerts = {
+    //     new PVector(50,35),
+    //     new PVector(40,40),
+    //     new PVector(60,65),
+    //     new PVector(65,50)
+    // };
 
     public static void main(String[] args) {
         PApplet.main("frdk.geomTestApp");
@@ -68,16 +100,18 @@ public class geomTestApp extends PApplet{
     }
 
     public void settings() {
-        size(800, 800);
+        size(1600, 800);
     }
 
     public void setup() {
-        box = new FPolygon(boxVerts);
-        box.centerAt(width/2, height/2);
+        // box = new FPolygon(boxVerts);
+        // box.addContour(voidVerts);
+        // box.centerAt(width/2, height/2);
         
-        cursor = new FPolygon(diamondVerts);
-        cursor.scale(1.5f);
-        cursor.centerAt(width/2 + 175, height/2);
+        // cursor = new FPolygon(diamondVerts);
+        // cursor.addContour(holeVerts);
+        // cursor.scale(1.5f);
+        // cursor.centerAt(225, 218);
 
         boxA = new FPolygon(boxVerts);
         boxA.centerAt(200, 200);
@@ -111,39 +145,23 @@ public class geomTestApp extends PApplet{
         boxL.centerAt(500, 700);
 
         twisted = new FPolygon(twistedVerts);
-        twisted.centerAt(width/2, 1000);
+        twisted.centerAt(1200, 200);
         hollow = new FPolygon(longBoxVerts);
         hollow.addContour(longHoleVerts);
-        hollow.centerAt(width/2, 1000);
+        hollow.centerAt(1200, 200);
 
         hollow2 = new FPolygon(longBoxVerts);
         hollow2.addContour(longHoleVerts);
-        hollow2.centerAt(width/2, 1300);
+        hollow2.centerAt(1200, 600);
         smallBox = new FPolygon(boxVerts);
-        smallBox.centerAt(450, 1350);
+        smallBox.centerAt(1200, 600);
+
     }
 
     public void draw() {
         background(128);
 
-        cursor.centerAt(mouseX, mouseY);
-        noFill();
-        strokeWeight(2);
-        //cursor.draw(this);
-        
-        //box.draw(this);
-        
-        //stroke(64);
-        //fill(0xff0ed1a3);
-        //FG.booleanOp_debug(box, cursor, traceType, this).draw(this);
-        
-        // // draw cursor
-        // cursor.centerAt(mouseX, mouseY);
-        // noFill();
-        // strokeWeight(2);
-        // cursor.draw(this);
-
-        // test boolean operations
+        //test boolean operations
         stroke(64);
         fill(0xff0ed1a3);
 

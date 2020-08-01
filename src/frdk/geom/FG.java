@@ -32,115 +32,221 @@ public class FG{
     public static final int XOR = 3;
 
     //--- INTERSECTION FLAGS ---//
-    static final int NO_INTERSECTION = 0;
+    public static final int NO_INTERSECTION = 0;
     // non-parallel cases
-    static final int X_INTERSECTION = 1;    //at mid of ab and cd, most common
-    static final int T1_INTERSECTION = 2;   //at start of ab
-    static final int T2_INTERSECTION = 3;   //at start of cd
-    static final int V_INTERSECTION = 4;    //at start of ab and cd
+    public static final int X_INTERSECTION = 1;    //at mid of ab and cd, most common
+    public static final int T1_INTERSECTION = 2;   //at start of ab
+    public static final int T2_INTERSECTION = 3;   //at start of cd
+    public static final int V_INTERSECTION = 4;    //at start of ab and cd
     // colinear cases
-    static final int X_OVERLAP = 5;         //both start on line
-    static final int T1_OVERLAP = 6;        //a on cd
-    static final int T2_OVERLAP = 7;        //c on ab
-    static final int V_OVERLAP = 8;         //a and c share start point
+    public static final int X_OVERLAP = 5;         //both start on line
+    public static final int T1_OVERLAP = 6;        //a on cd
+    public static final int T2_OVERLAP = 7;        //c on ab
+    public static final int V_OVERLAP = 8;         //a and c share start point
 
     //--- SIDE FLAGS ---//
     static final int ON = 0;
     static final int LEFT = 1;
     static final int RIGHT = 2;
 
-    static float epsilon = .0000f;  //accuracy range of calculations, tinker with for best results
-    static PVector testDir = new PVector(1.0f, 0.1f);
+    static final float epsilon = .00001f;  //accuracy range of calculations, tinker with for best results
+    static final PVector testDir = new PVector(1.0f, 0.0f);
 
-    //returns true if line a-b intersects line c-d
-    //intersection point stored in intPoint
-    public static boolean lineToLine(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
+    public static int lineToLineIntersection(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
         PVector ab = new PVector(b.x - a.x, b.y - a.y);
         PVector cd = new PVector(d.x - c.x, d.y - c.y);
+
+        // catch zero length segments
+        if((ab.mag() == 0.0) || (cd.mag() == 0.0)){
+            return -1;
+        }
         
         //based on equation:
         //ab * t + a = cd * u + c , which leads to:
-        //cd.y * (a.x - c.x) ) - (cd.x * (a.y - c.y) = t * ((ab.y * cd.x) - (ab.x * cd.y))
+        //(cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y)) = t * ((ab.y * cd.x) - (ab.x * cd.y))
+        //(ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y)) = u * ((ab.y * cd.x) - (ab.x * cd.y))
 
-        float t = (cd.y * (a.x - c.x) ) - (cd.x * (a.y - c.y));  //if this == 0, lines are parallel
-        if( PApplet.abs(t) > epsilon ) {
-            t = t / ((ab.y * cd.x) - (ab.x * cd.y));  //complete t calculation
-            //test if intersection point is in on line segment ab i.e. 0 < t < 1
-            if(t > 0 && t < 1) {
-                //now, calculate intersection point and set in PVector
-                intPoint.set( (ab.x * t) + a.x, (ab.y * t) + a.y);
-                //test if intersection point is on line segment cd
-                //based on dot product of c->d and c->int
-                //dot product must be positive and less than the sqrt of cd
-                PVector c_int = new PVector(intPoint.x - c.x , intPoint.y - c.y );
-                float dotProduct = PVector.dot(cd, c_int);
-                if(dotProduct > 0 && dotProduct < cd.magSq()) {
-                    return true;
-                } 
-                if(PVector.dist(intPoint, a) < epsilon || 
-                PVector.dist(intPoint, b) < epsilon || 
-                PVector.dist(intPoint, c) < epsilon || 
-                PVector.dist(intPoint, d) < epsilon ){
-                    //finally, to account for edges, this algorithm is slightly generous
-                    return true;
+        // 2nd half of above calculation
+        // tests slopes: parallel if this equals 0
+        float t = (ab.y * cd.x) - (ab.x * cd.y);
+        float u = (ab.y * cd.x) - (ab.x * cd.y);
+
+        float nearZero = 0.0f + epsilon;
+        float nearOne = 1.0f - epsilon;
+
+        // non-parallel cases:
+        if( PApplet.abs(t) > 0 ) {
+            t = ((cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y))) / t;  //complete t calculation
+            u = ((ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y))) / u;  //complete u calculation
+
+            if( (t > nearZero && t < nearOne) && (u > nearZero && u < nearOne) ) {
+                intPoint.set((ab.x * t) + a.x, (ab.y * t) + a.y);
+                return X_INTERSECTION;
+            }
+            else if((Math.abs(t) <= nearZero) && (u > nearZero && u < nearOne)){
+                intPoint.set(a.x, a.y);
+                return T1_INTERSECTION;
+            }
+            else if((t > nearZero && t < nearOne) && (Math.abs(u) <= nearZero)){
+                intPoint.set(c.x, c.y);
+                return T2_INTERSECTION;
+            }
+            else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
+                intPoint.set(a.x, a.y);
+                return V_INTERSECTION;
+            }
+        }
+        else {
+            //test for colinearity, using triangle area calculation
+            if(colinearTest(a, b, c) == 0 && (colinearTest(a, b, d) == 0)){
+                // parallel cases:
+                // t and u now reflect the position of a and c relative to each other
+                if(ab.x != 0.0f){
+                    t = (c.x - a.x)/ab.x;
+                } else {
+                    t = (c.y - a.y)/ab.y;
+                }
+                if(cd.x != 0.0f){
+                    u = (a.x - c.x)/cd.x;
+                } else {
+                    u = (a.y - c.y)/cd.y;
+                }
+
+                if( (t > nearZero && t < nearOne) && (u > nearZero && u < nearOne) ){
+                    intPoint.set(a.x, a.y);
+                    return X_OVERLAP;
+                }
+                else if(( (Math.abs(t) <= nearZero) || (Math.abs(t) >= nearOne) ) && (u > nearZero && u < nearOne)){
+                    intPoint.set(c.x, c.y);
+                    return T1_OVERLAP;
+                }
+                else if(( (Math.abs(u) <= nearZero) || (Math.abs(u) >= nearOne) ) && (t > nearZero && t < nearOne)){
+                    intPoint.set(a.x, a.y);
+                    return T2_OVERLAP;
+                }
+                else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
+                    intPoint.set(a.x, a.y);
+                    return V_OVERLAP;
                 }
             }
         }
-    return false;
+    //no intersection
+    intPoint = null;
+    return NO_INTERSECTION;
     }
 
-    //returns true if ray extending out from a-b intersects line c-d
-    //intersection point stored in intPoint
-    public static boolean rayToLine(PVector a, PVector b, PVector c, PVector d, PVector intPoint){  
+    public static int rayToLineIntersection(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
         PVector ab = new PVector(b.x - a.x, b.y - a.y);  //ab is the ray
         PVector cd = new PVector(d.x - c.x, d.y - c.y);  //cd is the line
         
         //based on equation:
         //ab * t + a = cd * u + c , which leads to:
-        //cd.y * (a.x - c.x) ) - (cd.x * (a.y - c.y) = t * ((ab.y * cd.x) - (ab.x * cd.y))
-        
-        float t = (cd.y * (a.x - c.x) ) - (cd.x * (a.y - c.y));  //if this == 0, lines are parallel
-        if( PApplet.abs(t) > epsilon ) {
-            t = t / ((ab.y * cd.x) - (ab.x * cd.y));  //complete t calculation
-            //test if intersection point is in front of ray i.e. t > 0
-            if(t > 0) {
-                //now, calculate intersection point and set in PVector
-                intPoint.set( (ab.x * t) + a.x, (ab.y * t) + a.y );
-                
-                //test if intersection point is on this line segment
-                //based on dot product of c->d and c->int
-                //dot product must be positive and less than the sqrt of cd
-                PVector c_int = new PVector(intPoint.x - c.x , intPoint.y - c.y );
-                float dotProduct = PVector.dot(cd, c_int);
-                if(dotProduct > 0 && dotProduct < cd.magSq()) {
-                    return true;
-                } 
-                // else if(PVector.dist(intPoint, c) < epsilon || PVector.dist(intPoint, d) < epsilon ){
-                //     //finally, to account for edges, this algorithm is slightly generous
-                //     return true;
-                // }
+        //(cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y)) = t * ((ab.y * cd.x) - (ab.x * cd.y))
+        //(ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y)) = u * ((ab.y * cd.x) - (ab.x * cd.y))
+
+        // 2nd half of above calculation
+        // tests slopes: parallel if this equals 0
+        float t = (ab.y * cd.x) - (ab.x * cd.y);
+        float u = (ab.y * cd.x) - (ab.x * cd.y);
+
+        float nearZero = 0.0f + epsilon;
+        float nearOne = 1.0f - epsilon;
+
+        // non-parallel cases:
+        if( PApplet.abs(t) > 0 ) {
+            t = ((cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y))) / t;  //complete t calculation
+            u = ((ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y))) / u;  //complete u calculation
+
+            // mid of ray and line
+            if( (t > nearZero) && (u > nearZero && u < nearOne) ) {
+                intPoint.set((ab.x * t) + a.x, (ab.y * t) + a.y);
+                return X_INTERSECTION;
+            }
+            // start of ray, mid-line
+            else if((Math.abs(t) <= nearZero) && (u > nearZero && u < nearOne)){
+                intPoint.set(a.x, a.y);
+                return T1_INTERSECTION;
+            }
+            // start of line, mid-ray
+            // add (|| u==1) to account for endedness (?)
+            else if((t > nearZero) && (Math.abs(u) <= nearZero)){
+                intPoint.set(c.x, c.y);
+                return T2_INTERSECTION;
+            }
+            // start of both
+            else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
+                intPoint.set(a.x, a.y);
+                return V_INTERSECTION;
             }
         }
-        return false;
+        else {
+            //test for colinearity, using triangle area calculation
+            if( (colinearTest(a, b, c) == 0) && (colinearTest(a, b, d) == 0) ){
+                // parallel cases:
+                // t and u now reflect the position of a and c relative to each other
+                if(ab.x != 0.0f){
+                    t = (c.x - a.x)/ab.x;
+                } else {
+                    t = (c.y - a.y)/ab.y;
+                }
+                if(cd.x != 0.0f){
+                    u = (a.x - c.x)/cd.x;
+                } else {
+                    u = (a.y - c.y)/cd.y;
+                }
+
+                // c is in front of ray
+                // additional cases are meaningless...
+                if(t > nearZero){
+                    intPoint = null;
+                    return X_OVERLAP;
+                }
+                //c is on a
+                else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
+                    intPoint.set(a.x, a.y);
+                    return V_OVERLAP;
+                }
+            }
+        }
+    //no intersection
+    intPoint = null;
+    return NO_INTERSECTION;
     }
 
     // TO-DO: make more robust, account for literal edge and corner cases
     public static boolean isPointInPoly(PVector point, FPolygon poly){
         PVector intPoint = new PVector();
-        int count1 = 0;
+        int crossCount = 0;
         PVector[] verts;
         for(int h = 0; h < poly.contourCount(); h++){
             verts = poly.getContour(h).getVerts();
             for (int i = 0; i < verts.length; i++) {
                 PVector v1 = verts[i];
                 PVector v2 = verts[ (i+1) % verts.length ];
-                if( rayToLine(point, PVector.add(point, testDir), v1, v2, intPoint) ) {
-                    count1++;
+
+                int result = rayToLineIntersection(point, PVector.add(point, testDir), v1, v2, intPoint);
+                if( result == X_INTERSECTION ) {
+                    crossCount++;
+                } else if (result == T2_INTERSECTION) {
+                    // find previous vertex, v0, that is not colinear to ray
+                    // test if previous vertex, v0, is on the opposite side of v2
+                    PVector v0 = verts[ (i + verts.length - 1) % verts.length ];
+                    for(int j = 0; j < verts.length; j++){
+                        if(colinearTest(point, v1, v0) != 0){ break; };
+                        v0 = verts[ (i + verts.length - (j+1)) % verts.length ];
+                    }
+                    boolean testv0 = colinearTest(point, v1, v0) > 0;
+                    boolean testv2 = colinearTest(point, v1, v2) > 0;    // True if skews left
+
+                    // if v0 and v2 are on different sides of ray, add to count
+                    if( (testv0 && !testv2) || (!testv0 && testv2) ){
+                        crossCount++;
+                    }
                 }
             }
         }
-        count1 = count1 % 2;
-        return ( count1 > 0 );
+        crossCount = crossCount % 2;
+        return ( crossCount > 0 );
     }
 
     //Should this be FShape/FShape intersection?
@@ -163,8 +269,9 @@ public class FG{
                         c = p2Contour[k];
                         d = p2Contour[(k+1) % p2Contour.length];
                         PVector intPoint = new PVector();
-        
-                        if (lineToLine(a,b,c,d,intPoint)) {
+                        
+                        int result = lineToLineIntersection(a,b,c,d,intPoint);
+                        if ( (result > NO_INTERSECTION) & (result < X_OVERLAP) ) {
                             intPoints.add(intPoint);
                         }
                     }
@@ -190,7 +297,8 @@ public class FG{
                 d = contour[(j+1) % contour.length];
                 PVector intPoint = new PVector();
 
-                if (lineToLine(a,b,c,d,intPoint)) {
+                int result = lineToLineIntersection(a,b,c,d,intPoint);
+                if ( (result > NO_INTERSECTION) & (result < X_OVERLAP) ) {
                     intPoints.add(intPoint);
                 }
             }
@@ -274,19 +382,18 @@ public class FG{
     }
 
     private static void initIntersections(ArrayList<Node> subjNodes, ArrayList<Node> objNodes){
-        for(Node subjStart : subjNodes){
-            Node a = subjStart;
-            Node b = a.next;
-            do{
-                for(Node objStart : objNodes){
-                    b = a.next;
-                    //check this segment against this object Node chain
+        for(Node objStart : objNodes){
+            for(Node subjStart : subjNodes){
+                Node a = subjStart;
+                Node b = a.next;
+                do{
                     checkIntersections(a, b, objStart, objStart);
-                }
-                // increment segment
-                a = a.next;
-                b = a.next;
-            } while( a != subjStart );
+
+                    // increment segment
+                    a = b;
+                    b = b.next;
+                } while( a != subjStart );
+            }
         }
     }
 
@@ -318,8 +425,10 @@ public class FG{
                     objInt.cross = subjInt;
 
                     // test new subject segments with remaining object segments
-                    checkIntersections(a, subjInt, objStart, d);
-                    checkIntersections(subjInt, b, objStart, d);
+                    if (d != objStart){
+                        checkIntersections(a, subjInt, objStart, d);
+                        checkIntersections(subjInt, b, objStart, d);
+                    }
                     return;
                 case T1_INTERSECTION:
                     objInt = new Node(a.pos);
@@ -343,8 +452,10 @@ public class FG{
                     c.cross = subjInt;
 
                     // test new subject segments with remaining object segments
-                    checkIntersections(a, subjInt, objStart, d);
-                    checkIntersections(subjInt, b, objStart, d);
+                    if (d != objStart){
+                        checkIntersections(a, subjInt, objStart, d);
+                        checkIntersections(subjInt, b, objStart, d);
+                    }
                     return;
                 case V_INTERSECTION:
                     a.cross = c;
@@ -372,8 +483,10 @@ public class FG{
                     a.cross = objInt;
 
                     // test new subject segments with remaining object segments
-                    checkIntersections(a, subjInt, objStart, d);
-                    checkIntersections(subjInt, b, objStart, d);
+                    if (d != objStart){
+                        checkIntersections(a, subjInt, objStart, d);
+                        checkIntersections(subjInt, b, objStart, d);
+                    }
                     return;
                 case T1_OVERLAP:
                     objInt = new Node(a.pos);
@@ -399,8 +512,10 @@ public class FG{
                     c.cross = subjInt;
 
                     // test new subject segments with remaining object segments
-                    checkIntersections(a, subjInt, objStart, d);
-                    checkIntersections(subjInt, b, objStart, d);
+                    if (d != objStart){
+                        checkIntersections(a, subjInt, objStart, d);
+                        checkIntersections(subjInt, b, objStart, d);
+                    }
                     return;
                 case V_OVERLAP:
                     a.cross = c;
@@ -418,6 +533,11 @@ public class FG{
         PVector ab = new PVector(b.x - a.x, b.y - a.y);
         PVector cd = new PVector(d.x - c.x, d.y - c.y);
         
+        // catch zero length segments
+        if((ab.mag() == 0.0) || (cd.mag() == 0.0)){
+            return -1;
+        }
+
         //based on equation:
         //ab * t + a = cd * u + c , which leads to:
         //(cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y)) = t * ((ab.y * cd.x) - (ab.x * cd.y))
@@ -428,51 +548,56 @@ public class FG{
         float t = (ab.y * cd.x) - (ab.x * cd.y);
         float u = (ab.y * cd.x) - (ab.x * cd.y);
 
+        float nearZero = 0.0f + epsilon;
+        float nearOne = 1.0f - epsilon;
+
         // non-parallel cases:
-        if( PApplet.abs(t) > 0 ) {
+        if( Math.abs(t) > 0 ) {
             t = ((cd.y * (a.x - c.x)) - (cd.x * (a.y - c.y))) / t;  //complete t calculation
             u = ((ab.y * (a.x - c.x)) - (ab.x * (a.y - c.y))) / u;  //complete u calculation
 
-            if(t > 0 && t < 1 && u > 0 && u < 1) {
+            if( (t > nearZero && t < nearOne) && (u > nearZero && u < nearOne) ) {
                 intPoint.set((ab.x * t) + a.x, (ab.y * t) + a.y);
                 return X_INTERSECTION;
             }
-            else if(t == 0 && u > 0 && u < 1){
+            else if((Math.abs(t) <= nearZero) && (u > nearZero && u < nearOne)){
                 return T1_INTERSECTION;
             }
-            else if(t > 0 && t < 1 && u == 0){
+            else if((t > nearZero && t < nearOne) && (Math.abs(u) <= nearZero)){
                 return T2_INTERSECTION;
             }
-            else if(t == 0 && u == 0){
+            else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
                 return V_INTERSECTION;
             }
         }
         else {
-            //test for colinearity, using triangle area calculation
-            if(colinearTest(a, b, c) == 0 && (colinearTest(a, b, d) == 0)){
+            //test for colinearity
+            if(colinearTest(a, b, c) == 0.0f && (colinearTest(a, b, d) == 0.0f)){
                 // parallel cases:
                 // t and u now reflect the position of a and c relative to each other
-                if(ab.x != 0){
+
+                // with zero length segments removed, one of these should be valid
+                if(ab.x != 0.0f){
                     t = (c.x - a.x)/ab.x;
                 } else {
                     t = (c.y - a.y)/ab.y;
                 }
-                if(cd.x != 0){
+                if(cd.x != 0.0f){
                     u = (a.x - c.x)/cd.x;
                 } else {
                     u = (a.y - c.y)/cd.y;
                 }
 
-                if(t > 0 && t < 1 && u > 0 && u < 1){
+                if( (t > nearZero && t < nearOne) && (u > nearZero && u < nearOne) ){
                     return X_OVERLAP;
                 }
-                else if((t < 0 || t >= 1) && u > 0 && u < 1){
+                else if(( (Math.abs(t) <= nearZero) || (Math.abs(t) >= nearOne) ) && (u > nearZero && u < nearOne)){
                     return T1_OVERLAP;
                 }
-                else if((u < 0 || u >= 1) && t > 0 && t < 1){
+                else if(( (Math.abs(u) <= nearZero) || (Math.abs(u) >= nearOne) ) && (t > nearZero && t < nearOne)){
                     return T2_OVERLAP;
                 }
-                else if(u == 0 && t == 0){
+                else if((Math.abs(t) <= nearZero) && (Math.abs(u) <= nearZero)){
                     return V_OVERLAP;
                 }
             }
@@ -621,6 +746,7 @@ public class FG{
     private static int getSide(Node subj, Node intersection, Node objPrev, Node objNext){
         if(subj.cross == objPrev){ return ON; }
         if(subj.cross == objNext){ return ON; }
+
         if(colinearTest(objPrev.pos, intersection.pos, objNext.pos) >= 0){
             //straight, or skews left
             if( (colinearTest(subj.pos, objPrev.pos, intersection.pos) > 0) && (colinearTest(subj.pos, intersection.pos, objNext.pos) > 0) ){
@@ -645,7 +771,6 @@ public class FG{
             do{
                 if(currentNode.isIntersection() && currentNode.isCrossing){
                     //test for entry case with midpoint of 'next' segment
-                    //TO-DO: THIS TEST POINT CAN BE ON THE TEST POLY, IF CURRENTNODE HAS X-ON SIDEDNESS
                     PVector testPoint;
                     if((currentNode.sidedness != Node.RIGHT_ON) && (currentNode.sidedness != Node.LEFT_ON) && (currentNode.sidedness != Node.ON_ON) ){
                         testPoint = PVector.lerp(currentNode.pos, currentNode.next.pos, 0.5f);
@@ -669,8 +794,11 @@ public class FG{
         }
     }
 
+    // tests which side of line ab point c is on
+    // 0 is on line, positive for one side, negative for the other
     private static float colinearTest(PVector a, PVector b, PVector c){
-        return (a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y));
+        //return (a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y));
+        return ((b.x - a.x) * (c.y - a.y)) - ((b.y - a.y) * (c.x - a.x));
     }
 
     private static FPolygon trace_and(ArrayList<Node> subjNodes, ArrayList<Node> objNodes, FPolygon obj, FPolygon subj){
@@ -1200,17 +1328,61 @@ public class FG{
     private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
         app.pushStyle();
         app.noFill();
-        app.strokeWeight(2);
         for(Node n : nodes){
             Node temp = n;
             do{
-                if(temp.isIntersection() && temp.isCrossing){
-                    if(temp.isEntry){
-                        app.stroke(0xffD10E3C); //red
+                if(temp.isIntersection()){
+                    app.strokeWeight(4);
+
+                    // shows sidedness
+                    // switch(temp.sidedness){
+                    //     case Node.ON_ON:
+                    //         app.stroke(0xff537895); //dark blue
+                    //         break;
+                    //     case Node.ON_RIGHT:
+                    //         app.stroke(0xff86a0b4); //mid blue
+                    //         break;
+                    //     case Node.ON_LEFT:
+                    //         app.stroke(0xffbac9d4); //light blue
+                    //         break;
+                    //     case Node.RIGHT_ON:
+                    //         app.stroke(0xffb20035); //dark red
+                    //         break;
+                    //     case Node.RIGHT_RIGHT:
+                    //         app.stroke(0xffc94c71); //mid red
+                    //         break;
+                    //     case Node.RIGHT_LEFT:
+                    //         app.stroke(0xffe099ae); //light red
+                    //         break;
+                    //     case Node.LEFT_ON:
+                    //         app.stroke(0xff8c3880); //dark purple
+                    //         break;
+                    //     case Node.LEFT_RIGHT:
+                    //         app.stroke(0xffae73a6); //mid purple
+                    //         break;
+                    //     case Node.LEFT_LEFT:
+                    //         app.stroke(0xffd1afcc); //light purple
+                    //         break;
+                    //     case -1:
+                    //         app.stroke(0xff00ff00); //neon green
+                    //         break;
+                    //     default:
+                    //         app.stroke(0xff3CD10E); //green
+                    //         break;
+                    // }
+                    
+                    // shows entry/exit
+                    if(temp.isCrossing){
+                        if(temp.isEntry){
+                            app.stroke(0xffD10E3C); //red
+                        } else {
+                            app.stroke(0xff58aed1); //blue
+                        }
                     } else {
-                        app.stroke(0xff58aed1); //blue
+                        app.stroke(0xff65285d); //purple
                     }
                 } else {
+                    app.strokeWeight(2);
                     app.stroke(0xff3CD10E); //green
                 }
                 app.ellipse(temp.pos.x, temp.pos.y, 12.0f*multiplier, 12.0f*multiplier);
