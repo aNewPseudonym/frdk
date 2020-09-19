@@ -2,6 +2,15 @@ package frdk.geom;
 
 import processing.core.*;
 
+/*
+TO-DO LIST:
+
+- Split FPoly into FGroup
+- offset
+- corner shaping: bevel, round
+
+*/
+
 public class FPolygon extends FShape{
     private FPath[] contours;
 
@@ -45,6 +54,28 @@ public class FPolygon extends FShape{
         }
         app.endShape(CLOSE);
     }
+    public void contribute(PGraphics pg){
+        for(int i = 0; i < contours.length; i++){
+            if(i == 0){
+                contours[i].contribute(pg);
+            } else {
+                pg.beginContour();
+                contours[i].contribute(pg);
+                pg.endContour();
+            }
+        }
+    }
+    public void contribute(PApplet app){
+        for(int i = 0; i < contours.length; i++){
+            if(i == 0){
+                contours[i].contribute(app);
+            } else {
+                app.beginContour();
+                contours[i].contribute(app);
+                app.endContour();
+            }
+        }
+    }
 
     //--- MANIPULATE ---
     public void addContour(FPath contour){
@@ -73,7 +104,6 @@ public class FPolygon extends FShape{
         }
         return count;
     }
-
     public FPath getContour(int index){
         if(index > -1 && index < contours.length){
             return contours[index];

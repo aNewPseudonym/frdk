@@ -44,7 +44,7 @@
                 "showReuseMessage": true,
                 "clear": false
             },
-            "command": "java -cp \\\"bin;lib/*\\\" frdk/uiTestApp",
+            "command": "java -cp \\\"bin;lib/*\\\" frdk/geomImportTestApp",
             "group": {
                 "kind": "test",
                 "isDefault": true

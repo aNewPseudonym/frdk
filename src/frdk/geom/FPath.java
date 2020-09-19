@@ -11,11 +11,11 @@ public class FPath extends FShape{
     }
     public FPath(PVector[] verts){
         this.verts = new PVector[0];
-        appendVertArray(verts);
+        appendVertexArray(verts);
     }
     public FPath(FPath toCopy){
         this.verts = new PVector[0];
-        appendVertArray(toCopy.getVerts());
+        appendVertexArray(toCopy.getVerts());
     }
     // helpful copy function
     public FPath copy(){
@@ -38,12 +38,12 @@ public class FPath extends FShape{
         app.endShape();
     }
     // used by FPolygon
-    protected void contribute(PGraphics pg){
+    public void contribute(PGraphics pg){
         for(int i = 0; i < verts.length; i++){
             pg.vertex(verts[i].x, verts[i].y);
         }
     }
-    protected void contribute(PApplet app){
+    public void contribute(PApplet app){
         for(int i = 0; i < verts.length; i++){
             app.vertex(verts[i].x, verts[i].y);
         }
@@ -103,13 +103,19 @@ public class FPath extends FShape{
     }
 
     //--- MANIPULATE VERTICES ---
+    public void appendVertex(float x, float y){
+        PVector[] newVerts = new PVector[verts.length + 1];
+        System.arraycopy(verts, 0, newVerts, 0, verts.length);
+        newVerts[verts.length] = new PVector(x,y);
+        verts = newVerts;
+    }
     public void appendVertex(PVector v){
         PVector[] newVerts = new PVector[verts.length + 1];
         System.arraycopy(verts, 0, newVerts, 0, verts.length);
         newVerts[verts.length] = v.copy();
         verts = newVerts;
     }
-    public void appendVertArray(PVector[] va){
+    public void appendVertexArray(PVector[] va){
         PVector[] newVerts = new PVector[verts.length + va.length];
         System.arraycopy(verts, 0, newVerts, 0, verts.length);
         for(int i = 0; i < va.length; i++){

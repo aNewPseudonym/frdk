@@ -5,16 +5,14 @@ import java.util.ArrayList;
 
 //GeomManager?
 /*
-    useful functions:
+    TO-DO LIST:
 
-    Shape creation
-        standards for ellipses, rects, regular polygons
-        stars? bezier curves?
+    PShape Loading
+    SVG loading?
 
-    SVG loading!
-
-    boolean functions: intersect, diff, union, xor
-        returns new fshape
+    boolean functions:
+        Make for FPoly/FPoly, FPoly/FGroup, FGroup/FPoly, and FGroup/FGroup
+        xor function
 
     intersection functions
         FShape/FShape
@@ -51,6 +49,534 @@ public class FG{
 
     static final float epsilon = .00001f;  //accuracy range of calculations, tinker with for best results
     static final PVector testDir = new PVector(1.0f, 0.0f);
+
+    static public int segments = 32;
+
+    //--- IMPORT FUNCTIONS ---
+
+    public static FGroup PShapeToGroup(PShape pshape){
+        FGroup newGroup = new FGroup();
+
+        int childCount = pshape.getChildCount();
+        for(int i = 0; i < childCount; i++){
+            PShape child = pshape.getChild(i);
+            int family = child.getFamily();
+            int kind = child.getKind();
+            
+            // for GROUP
+            if (family == PShape.GROUP){
+                System.out.println("GROUP START");
+                newGroup.appendChild(PShapeToGroup(child));
+                System.out.println("GROUP END");
+                System.out.println();
+            }
+
+            // for PRIMITIVEs
+            if (family == PShape.PRIMITIVE){
+                System.out.println("PRIMITIVE");
+                float[] params = child.getParams();
+                
+                FPath currentPath = new FPath();
+                FPolygon poly = new FPolygon();
+
+                switch(kind){
+                    // ELLIPSE, RECT, ARC, TRIANGLE, QUAD, POINT or LINE
+                    // BOX and SPHERE are 3D only, with 3D LINEs and POINTs not supported
+                    case PShape.ELLIPSE:
+                        // ellipse(a,b,c,d)
+                        // I cannot determine if ellipse is using CORNER or CENTER mode
+                        // depends on shape's origin?
+                        System.out.println("ELLIPSE: " + params.length + " params");
+                        poly = new FPolygon( getPoints_ellipse( params[0], params[1], params[2], params[3] ) );
+                        newGroup.appendChild(poly);
+                        break;
+
+                    case PShape.RECT:
+                        System.out.println("RECT: " + params.length + " params");
+                        if(params.length == 4){
+                            poly = new FPolygon( getPoints_rect( params[0], params[1], params[2], params[3] ) );
+                        } else if (params.length == 5){
+                            poly = new FPolygon( getPoints_rectRadius( 
+                                params[0], params[1], params[2], params[3],
+                                params[4], params[4], params[4], params[4] ) );
+                            //rect(a, b, c, d, r)
+                        } else if (params.length == 8){
+                            poly = new FPolygon( getPoints_rectRadius( 
+                                params[0], params[1], params[2], params[3],
+                                params[4], params[5], params[6], params[7] ) );
+                            //rect(a, b, c, d, tl, tr, br, bl)
+                        }
+                        newGroup.appendChild(poly);
+                        break;
+
+                    case PShape.ARC:
+                        System.out.println("ARC: " + params.length + " params");
+                        // arc(a, b, c, d, start, stop)
+                        // arc(a, b, c, d, start, stop, mode)
+                        // mode: nothing(treat as OPEN), OPEN, CHORD, or PIE
+                        int mode = 0;
+                        if(params.length == 6){
+                            mode = PShape.OPEN;
+                            currentPath.appendVertexArray( getPoints_arc( 
+                                params[0], params[1], params[2], params[3],
+                                params[4], params[5], mode ) );
+                        } else if (params.length == 7){
+                            mode = (int)params[6];
+                            currentPath.appendVertexArray( getPoints_arc( 
+                                params[0], params[1], params[2], params[3],
+                                params[4], params[5], mode ) );
+                        }
+
+                        if((mode == PShape.CHORD) || (mode == PShape.PIE)){
+                            //CHORD and PIE are closed polys
+                            poly.addContour(currentPath);
+                            newGroup.appendChild(poly);
+                        } else {
+                            // OPEN is an open path
+                            newGroup.appendChild(currentPath);
+                        }
+                        break;
+
+                    case PShape.TRIANGLE:
+                        //triangle(x1,y1,x2,y2,x3,y3)
+                        System.out.println("TRIANGLE: " + params.length + " params");
+                        poly = new FPolygon( getPoints_triangle(
+                            params[0], params[1], params[2], params[3], params[4], params[5] ) );
+                        newGroup.appendChild(poly);
+                        break;
+
+                    case PShape.QUAD:
+                        System.out.println("QUAD: " + params.length + " params");
+                        // quad(x1, y1, x2, y2, x3, y3, x4, y4)
+                        poly = new FPolygon( getPoints_quad(
+                            params[0], params[1], params[2], params[3], 
+                            params[4], params[5], params[6], params[7] ) );
+                        newGroup.appendChild(poly);
+                        break;
+
+                    case PShape.LINE:
+                        System.out.println("LINE: " + params.length + " params");
+                        // line(x1, y1, x2, y2)
+                        currentPath.appendVertex( params[0], params[1] );
+                        currentPath.appendVertex( params[2], params[3] );
+                        newGroup.appendChild(currentPath);
+                        break;
+
+                    case PShape.POINT:
+                        System.out.println("POINT: " + params.length + " params");
+                        // point(x, y)
+                        currentPath.appendVertex( params[0], params[1] );
+                        newGroup.appendChild(currentPath);
+                        break;
+
+                    default:
+                        break;
+                }
+                System.out.println();
+            }
+            
+            // for PATHs
+            if (family == PShape.PATH){
+                // Print info
+                System.out.println("PATH");
+                System.out.println("VertCount: " + child.getVertexCount());
+                newGroup.appendChild(getPoints_path(child));
+            }
+
+            // for GEOMETRY
+            if (family == PShape.GEOMETRY){
+
+                System.out.println("GEOMETRY");
+                System.out.println("VertCount: " + child.getVertexCount());
+                System.out.println("VertCodeCount: " + child.getVertexCodeCount());
+
+                FPath currentPath = new FPath();
+                FPolygon poly = new FPolygon();
+
+                switch(kind){
+                    case PShape.POLYGON:
+                        System.out.println("POLYGON: ");
+                        //equivalent of a PATH shape
+                        newGroup.appendChild( getPoints_path(child) );
+                        break;
+                    case PShape.POINTS:
+                        System.out.println("POINTS: ");
+                        //treat as group of single length paths
+                        FGroup pointGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount(); j++){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            pointGroup.appendChild(currentPath);
+                            currentPath = new FPath();
+                        }
+                        newGroup.appendChild(pointGroup);
+                        break;
+                    case PShape.LINES:
+                        System.out.println("LINES: ");
+                        // group of 2-length paths
+                        FGroup lineGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount()-1; j+=2){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            lineGroup.appendChild(currentPath);
+                            currentPath = new FPath();
+                        }
+                        newGroup.appendChild(lineGroup);
+                        break;
+                    case PShape.TRIANGLES:
+                        System.out.println("TRIANGLES: ");
+                        // group of closed polys, 3 vertices each
+                        FGroup triGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount()-2; j+=3){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            currentPath.appendVertex( child.getVertexX(j+2), child.getVertexY(j+2) );
+                            poly.addContour(currentPath);
+                            triGroup.appendChild(poly);
+                            currentPath = new FPath();
+                            poly = new FPolygon();
+                        }
+                        newGroup.appendChild(triGroup);
+                        break;
+                    case PShape.TRIANGLE_STRIP:
+                        System.out.println("TRIANGLE_STRIP: ");
+                        // group of closed polys, use previous 2 vertices plus 1 new each time
+                        FGroup triStripGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount()-2; j+=1){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            currentPath.appendVertex( child.getVertexX(j+2), child.getVertexY(j+2) );
+                            poly.addContour(currentPath);
+                            triStripGroup.appendChild(poly);
+                            currentPath = new FPath();
+                            poly = new FPolygon();
+                        }
+                        newGroup.appendChild(triStripGroup);
+                        break;
+                    case PShape.TRIANGLE_FAN:
+                        System.out.println("TRIANGLE_FAN: ");
+                        // save first vertex, make group of closed polys with first plus every 2 vertices
+                        FGroup triFanGroup = new FGroup();
+                        for(int j = 1; j < child.getVertexCount()-1; j+=1){
+                            currentPath.appendVertex( child.getVertexX(0), child.getVertexY(0) );
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            poly.addContour(currentPath);
+                            triFanGroup.appendChild(poly);
+                            currentPath = new FPath();
+                            poly = new FPolygon();
+                        }
+                        newGroup.appendChild(triFanGroup);
+                        break;
+                    case PShape.QUADS:
+                        System.out.println("QUADS: ");
+                        // group of closed polys, 4 vertices each
+                        FGroup quadGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount()-3; j+=4){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            currentPath.appendVertex( child.getVertexX(j+2), child.getVertexY(j+2) );
+                            currentPath.appendVertex( child.getVertexX(j+3), child.getVertexY(j+3) );
+                            poly.addContour(currentPath);
+                            quadGroup.appendChild(poly);
+                            currentPath = new FPath();
+                            poly = new FPolygon();
+                        }
+                        newGroup.appendChild(quadGroup);
+                        break;
+                    case PShape.QUAD_STRIP:
+                        System.out.println("QUAD_STRIP: ");
+                        // group of closed polys, use previous 2 vertices plus 2 new each time
+                        FGroup quadStripGroup = new FGroup();
+                        for(int j = 0; j < child.getVertexCount()-3; j+=2){
+                            currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+                            currentPath.appendVertex( child.getVertexX(j+1), child.getVertexY(j+1) );
+                            currentPath.appendVertex( child.getVertexX(j+3), child.getVertexY(j+3) );
+                            currentPath.appendVertex( child.getVertexX(j+2), child.getVertexY(j+2) );
+                            poly.addContour(currentPath);
+                            quadStripGroup.appendChild(poly);
+                            currentPath = new FPath();
+                            poly = new FPolygon();
+                        }
+                        newGroup.appendChild(quadStripGroup);
+                        break;
+                    default:
+                        break;
+                }
+
+                if(child.isClosed()){
+                    poly.addContour(currentPath);
+                    newGroup.appendChild(poly);
+                } else {
+                    newGroup.appendChild(currentPath);
+                }
+
+                for(int j = 0; j < child.getVertexCount(); j++){
+                    System.out.println(child.getVertexX(j) + ", " + child.getVertexY(j));
+                }
+                System.out.println();
+            }
+            
+        }
+        return newGroup;
+    }
+
+    private static FShape getPoints_path(PShape child){
+        int vertCodeCount = child.getVertexCodeCount();
+        int[] vertCodes = child.getVertexCodes();
+
+        // Construct Path
+        FPath currentPath = new FPath();
+        FPolygon poly = new FPolygon();
+
+        if(vertCodeCount == 0){
+            //if no vertex codes, all are regular vertices
+            for(int j = 0; j < child.getVertexCount(); j++){
+                currentPath.appendVertex( child.getVertexX(j), child.getVertexY(j) );
+            }
+        } else {
+            int vIndex = 0; // tracks current vertex index
+            for(int j = 0; j < vertCodeCount; j++){
+                switch (vertCodes[j]){
+                    case PShape.VERTEX:
+                        currentPath.appendVertex(child.getVertexX(vIndex), child.getVertexY(vIndex));
+                        vIndex += 1;
+                        break;
+                    case PShape.BEZIER_VERTEX:
+                        currentPath.appendVertexArray(getPoints_cubic( 
+                            child.getVertexX(vIndex-1), child.getVertexY(vIndex-1),
+                            child.getVertexX(vIndex), child.getVertexY(vIndex),
+                            child.getVertexX(vIndex+1), child.getVertexY(vIndex+1),
+                            child.getVertexX(vIndex+2), child.getVertexY(vIndex+2) 
+                            ));
+                        vIndex += 3;
+                        break;
+                    case PShape.QUADRATIC_VERTEX:
+                        currentPath.appendVertexArray(getPoints_quadratic( 
+                            child.getVertexX(vIndex-1), child.getVertexY(vIndex-1),
+                            child.getVertexX(vIndex), child.getVertexY(vIndex),
+                            child.getVertexX(vIndex+1), child.getVertexY(vIndex+1) 
+                            ));
+                        vIndex += 2;
+                        break;
+                    case PShape.CURVE_VERTEX:
+                        // centripetal Catmull-Rom Spline calculation not implemented yet
+                        // OR NEVER LOL WHO CARES
+                        System.out.println("CURVE_VERTEX not implemented");
+                        vIndex += 2;
+                        break;
+                    case PShape.BREAK:
+                        poly.addContour(currentPath);
+                        currentPath = new FPath();
+                        break;
+                }
+            }
+        }
+        if(child.isClosed()){
+            poly.addContour(currentPath);
+            return poly;
+        } else {
+            return currentPath;
+        }
+    }
+
+    private static PVector[] getPoints_cubic(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3){
+        PVector[] points = new PVector[segments];
+        float t = 0;
+
+        for(int i = 0; i < segments-1; i++) {
+            t = (1.0f/(float)segments) * (i+1);
+
+            float p0x = (1-t) * (1-t) * (1-t) * x0;
+            float p1x = (1-t) * (1-t) * (t) * 3 * x1;
+            float p2x = (1-t) * (t) * (t) * 3 * x2;
+            float p3x = (t) * (t) * (t) * x3;
+
+            float p0y = (1-t) * (1-t) * (1-t) * y0;
+            float p1y = (1-t) * (1-t) * (t) * 3 * y1;
+            float p2y = (1-t) * (t) * (t) * 3 * y2;
+            float p3y = (t) * (t) * (t) * y3;
+
+            float x = p0x + p1x + p2x + p3x;
+            float y = p0y + p1y + p2y + p3y;
+
+            points[i] = new PVector(x, y);
+        }
+        points[segments-1] = new PVector(x3, y3);
+
+        return points;
+    }
+
+    private static PVector[] getPoints_quadratic(float x0, float y0, float x1, float y1, float x2, float y2){
+        PVector[] points = new PVector[segments];
+        float t = 0;
+
+        for(int i = 0; i < segments-1; i++) {
+            t = (1.0f/(float)segments) * (i+1);
+
+            float p0x = (1-t) * (1-t) * x0;
+            float p1x = (1-t) * (t) * 2 * x1;
+            float p2x = (t) * (t) * x2;
+
+            float p0y = (1-t) * (1-t) * y0;
+            float p1y = (1-t) * (t) * 2 * y1;
+            float p2y = (t) * (t) * y2;
+
+            float x = p0x + p1x + p2x;
+            float y = p0y + p1y + p2y;
+
+            points[i] = new PVector(x, y);
+        }
+        points[segments-1] = new PVector(x2, y2);
+
+        return points;
+    }
+
+    private static PVector[] getPoints_ellipse(float cx, float cy, float dx, float dy){
+        PVector[] points = new PVector[segments * 4];
+        double t = 0;
+        for(int i = 0; i < segments * 4; i++) {
+            t = ( (2*Math.PI)/(double)(segments * 4) ) * i;
+            double x = (dx/2.0f) * Math.cos(t);
+            x += cx + dx/2.0f;
+            double y = (dy/2.0f) * Math.sin(t);
+            y += cy + dy/2.0f;
+            points[i] = new PVector((float)x, (float)y);
+        }
+        return points;
+    }
+
+    private static PVector[] getPoints_rect(float a, float b, float c, float d){
+        PVector[] points = new PVector[4];
+        points[0] = new PVector(a, b);
+        points[1] = new PVector(a + c, b);
+        points[2] = new PVector(a + c, b + d);
+        points[3] = new PVector(a, b + d);
+        return points;
+    }
+    private static PVector[] getPoints_rectRadius(float a, float b, float c, float d, float tl, float tr, float br, float bl){
+        PVector[] points = new PVector[4 * (segments+1)];
+        PVector[] corner;
+
+        corner = getPoints_arc(a+tl, b+tl, tl*2, tl*2, PShape.PI, PShape.PI+PShape.HALF_PI, PShape.OPEN);
+        System.arraycopy(corner, 0, points, 0, segments+1);
+        corner = getPoints_arc(a+c-tr, b+tr, tr*2, tr*2, PShape.PI+PShape.HALF_PI, PShape.TWO_PI, PShape.OPEN);
+        System.arraycopy(corner, 0, points, 1*(segments+1), segments+1);
+        corner = getPoints_arc(a+c-br, b+d-br, br*2, br*2, 0, PShape.HALF_PI, PShape.OPEN);
+        System.arraycopy(corner, 0, points, 2*(segments+1), segments+1);
+        corner = getPoints_arc(a+bl, b+d-bl, bl*2, bl*2, PShape.HALF_PI, PShape.PI, PShape.OPEN);
+        System.arraycopy(corner, 0, points, 3*(segments+1), segments+1);
+
+        return points;
+    }
+
+    // mode: OPEN, CHORD, or PIE
+    private static PVector[] getPoints_arc(float cx, float cy, float dx, float dy, float start, float stop, int mode){
+        PVector[] points;
+        
+        if(mode == PShape.PIE){
+            //need an extra point for PIE
+            points = new PVector[segments+2];
+        } else {
+            points = new PVector[segments+1];
+        }
+
+        double t = 0;
+        for(int i = 0; i < segments+1; i++) {
+            t = (( (stop-start)/(double)segments ) * i) + start;
+
+            float x = dx/2 * (float)Math.cos(t);
+            x += cx;
+            float y = dy/2 * (float)Math.sin(t);
+            y += cy;
+            points[i] = new PVector(x, y);
+        }
+
+        if(mode == PShape.PIE){
+            //add center point for PIE
+            points[segments+1] = new PVector(cx, cy);
+        }
+
+        return points;
+    }
+
+    private static PVector[] getPoints_triangle(float x1, float y1, float x2, float y2, float x3, float y3){
+        PVector[] points = new PVector[3];
+        points[0] = new PVector(x1, y1);
+        points[1] = new PVector(x2, y2);
+        points[2] = new PVector(x3, y3);
+        return points;
+    }
+    
+    private static PVector[] getPoints_quad(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4){
+        PVector[] points = new PVector[4];
+        points[0] = new PVector(x1, y1);
+        points[1] = new PVector(x2, y2);
+        points[2] = new PVector(x3, y3);
+        points[3] = new PVector(x4, y4);
+        return points;
+    }
+
+    // Implement if PShape functionality is lacking...
+    // SVG import ref: https://github.com/rikrd/geomerative/blob/master/src/geomerative/
+    /*
+    public FShape XMLtoGroup(XML xml){
+        XML elems[] = xml.getChildren();
+        for (int i = 0; i < elems.length; i++) {
+            String name = elems[i].getName().toLowerCase();
+            XML element = elems[i];
+
+            // Parse and create the geometrical element
+            FShape geomElem = null;
+            if(name.equals("g")){
+                geomElem = elemToGroup(element);
+
+            } else if (name.equals("path")) {
+                geomElem = elemToShape(element);
+
+            } else if(name.equals("polygon")){
+                geomElem = elemToPolygon(element);
+
+            } else if(name.equals("polyline")){
+                geomElem = elemToPolyline(element);
+
+            } else if(name.equals("circle")){
+                geomElem = elemToCircle(element);
+
+            } else if(name.equals("ellipse")){
+                geomElem = elemToEllipse(element);
+
+            } else if(name.equals("rect")){
+                geomElem = elemToRect(element);
+
+            } else if(name.equals("line")){
+                geomElem = elemToLine(element);
+
+            } else if(name.equals("defs")){
+                // Do nothing normally we should make a hashmap
+                // to apply everytime they are called in the actual objects
+            } else{
+                PApplet.println("Element '" + name + "' not known, ignored.");
+            }
+
+            // If the geometrical element has been correctly created
+            if((geomElem != null)){
+                // Transform geometrical element
+                if(element.hasAttribute("transform")){
+                String transformString = element.getString("transform");
+                RMatrix transf = new RMatrix(transformString);
+                geomElem.transform(transf);
+                }
+
+                // Get the style for the geometrical element
+                grp.addElement(geomElem);
+            }
+        }
+
+        return grp;
+    }
+    */
+
+    //--- INTERSECTION FUNCTIONS ---
 
     public static int lineToLineIntersection(PVector a, PVector b, PVector c, PVector d, PVector intPoint){
         PVector ab = new PVector(b.x - a.x, b.y - a.y);
@@ -307,7 +833,7 @@ public class FG{
         return intPoints;
     }
 
-    //--- FOR BOOLEAN OPERATIONS ---
+    //--- BOOLEAN OPERATION FUNCTIONS ---
 
     //Should this be FShape/FShape intersection? Eventually...
     public static FPolygon booleanOp_debug(FPolygon subj, FPolygon obj, int traceType, PApplet app){
@@ -1325,6 +1851,7 @@ public class FG{
         }
     }
 
+    // for debug visualization
     private static void drawNodes(ArrayList<Node> nodes, PApplet app, float multiplier){
         app.pushStyle();
         app.noFill();

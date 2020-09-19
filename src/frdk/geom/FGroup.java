@@ -18,10 +18,19 @@ public class FGroup extends FShape{
             children[i].draw(pg);
         }
     }
-
     public void draw(PApplet app){
         for(int i = 0; i < children.length; i++){
             children[i].draw(app);
+        }
+    }
+    public void contribute(PGraphics pg){
+        for(int i = 0; i < children.length; i++){
+            children[i].contribute(pg);
+        }
+    }
+    public void contribute(PApplet app){
+        for(int i = 0; i < children.length; i++){
+            children[i].contribute(app);
         }
     }
 

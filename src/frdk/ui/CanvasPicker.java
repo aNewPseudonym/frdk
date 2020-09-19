@@ -37,7 +37,7 @@ public class CanvasPicker{
     }
 
     public void defineCanvas(uiCanvas currentCanvas){
-        canvasDict.put(new Integer(currentID), currentCanvas);
+        canvasDict.put( Integer.valueOf(currentID), currentCanvas);
         Iterator<uiCanvas> iter = currentCanvas.getElementIterator();
         while(iter.hasNext()){
             currentID += 1;

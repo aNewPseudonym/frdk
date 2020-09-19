@@ -2,6 +2,7 @@ package frdk;
 
 import frdk.geom.*;
 import processing.core.*;
+
 //import java.util.ArrayList;
 
 public class geomTestApp extends PApplet{
@@ -101,9 +102,11 @@ public class geomTestApp extends PApplet{
 
     public void settings() {
         size(1600, 800);
+        pixelDensity(displayDensity());
     }
 
     public void setup() {
+
         // box = new FPolygon(boxVerts);
         // box.addContour(voidVerts);
         // box.centerAt(width/2, height/2);

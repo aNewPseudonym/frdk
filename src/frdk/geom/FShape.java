@@ -6,18 +6,14 @@ public abstract class FShape implements PConstants{
     public abstract void draw(PGraphics pg);
     public abstract void draw(PApplet app);
 
-    /*  
-    FUNCTIONS TO ADD
-    
-    TRANSFORMS
-        scaleX/scaleY
-        scaleSelf, rotateSelf -> from centroid
-        skew? twist? not really necessary...
-        offset
+    public abstract void contribute(PGraphics pg);
+    public abstract void contribute(PApplet app);
 
-    ALIGNING
+    /*
+    ALIGNING (Only for groups?)
         fitTo/fitXTo/fitYTo
-        vertAlign, horzAlign
+        vertAlignCenter, vertAlignTop, vertAlignBottom
+        horzAlignCenter, horzAlignLeft, horzAlignRight
         vertDistribute, horzDistribute
     */
 
@@ -29,6 +25,8 @@ public abstract class FShape implements PConstants{
     //--- MEASURING ---
     // abstract public float getWidth();
     // abstract public float getHeight();
+    // abstract public float getArea();
+    // abstract public float getLength();
     abstract public PVector getCentroid();
     abstract public PVector getMidpoint();
 
@@ -39,8 +37,13 @@ public abstract class FShape implements PConstants{
     //--- TRANSFORMS ---
     abstract public void translate(float x, float y);
     abstract public void scale(float s);
-    abstract public void scaleAbout(float centerX, float centerY,float s);
+    //abstract public void scale(float sx, float sy);
+    abstract public void scaleAbout(float centerX, float centerY, float s);
+    //abstract public void scaleAbout(float centerX, float centerY, float sx, float sy);
     abstract public void rotate(float rad);
     abstract public void rotateAbout(float centerX, float centerY, float rad);
+    //abstract public void skew(float angle);
+    //abstract public void shear(x, y)
+    //abstract public void offset(float dist);
 
 }

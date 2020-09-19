@@ -9,7 +9,7 @@ public class uiCanvas implements PConstants{
     private static PApplet app;
 
     public PVector pos;     // either top-left corner, or center
-    //public PShape shape;    // shape of canvas - RECT by default
+    //public PShape shape;    // shape of canvas
     public FPolygon shape;
 
     public PGraphics pg;    // where canvas and decorators draw to, sized by dim
@@ -57,7 +57,7 @@ public class uiCanvas implements PConstants{
         parent = null;
     }
 
-    // constructor with PShape
+    // constructor with FPolygon
     public uiCanvas(float posX, float posY, FPolygon ps) {
         pos = new PVector(posX, posY);
         shape = ps;
@@ -154,7 +154,7 @@ public class uiCanvas implements PConstants{
     // translates to itself, draws it's decorators, then all children
     public void drawCanvas(float x, float y) {
         if(showSelf){
-            // update clipping mask
+            // update alpha mask
             alphaMask.beginDraw();
             alphaMask.background(0);
             alphaMask.noStroke();
@@ -186,6 +186,6 @@ public class uiCanvas implements PConstants{
                 ele.drawCanvas(x + pos.x, y + pos.y);
             }
         }
-        
     }
+
 }
